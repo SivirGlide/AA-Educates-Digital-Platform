@@ -36,13 +36,13 @@ The project can run with defaults. If you prefer `.env`:
 DEBUG=True
 SECRET_KEY=change-me
 ```
-If you add `.env`, wire it in `project/project/settings.py` using `environs` (already installed).
+If you add `.env`, wire it in `aa_educates/aa_educates/settings.py` using `environs` (already installed).
 
-## 4) Apply migrations and run the server
-From the `project/` directory:
+## 4) Apply migrations and run the server (aa_educates)
+From the `aa_educates/` directory:
 ```bash
-cd project
-python3 manage.py makemigrations api
+cd aa_educates
+python3 manage.py makemigrations
 python3 manage.py migrate
 python3 manage.py runserver
 ```
@@ -51,13 +51,13 @@ Server runs at `http://127.0.0.1:8000/`.
 ## 5) Quick API smoke test
 Use the browsable API at `/` or curl examples:
 ```bash
-# Create a course
-curl -sS -X POST http://127.0.0.1:8000/courses/ \
+# Example: create a user (minimal) then list users
+curl -sS -X POST http://127.0.0.1:8000/users/users/ \
   -H "Content-Type: application/json" \
-  -d '{"title":"Intro to AI","description":"Basics","is_published":true}'
+  -d '{"username":"alice","email":"alice@example.com","password":"Passw0rd!","first_name":"Alice","last_name":"A"}'
 
-# List courses
-curl -sS http://127.0.0.1:8000/courses/
+# List users
+curl -sS http://127.0.0.1:8000/users/users/
 ```
 
 ## 6) Admin access (optional)
@@ -66,21 +66,38 @@ python3 manage.py createsuperuser
 # Visit http://127.0.0.1:8000/admin/
 ```
 
-## 7) Project structure
+## 7) Project structure (base-schema-0.3)
 ```
 AA-Educates-Digital-Platform/
-  project/
-    project/                # Django project settings/urls
-    api/                    # App with models/serializers/views/urls
+  aa_educates/
+    aa_educates/            # Django project settings/urls/wsgi/asgi
+    users/                  # Custom User + Profiles (Student/Parent/School/Corporate/Admin)
+    projects/               # Projects and StudentProjectSubmission
+    learning/               # Module, Resource, Workbook, WorkbookPurchase
+    mentorship/             # MentorProfile, Session, SessionFeedback
+    achievements/           # Skill, Badge, Certificate
+    community/              # Post, Comment, GroupChat, Message
+    analytics/              # ProgressTracker, EngagementLog, ImpactReport
+    payments/               # PaymentTransaction, CRMContactLog
     manage.py
   client/                   # Frontend (Next.js) placeholder
 ```
 
-## 8) Common commands
+## 8) URLs overview (prefixes)
+- Users: `/users/`
+- Projects: `/projects/`
+- Learning: `/learning/`
+- Mentorship: `/mentorship/`
+- Achievements: `/achievements/`
+- Community: `/community/`
+- Analytics: `/analytics/`
+- Payments: `/payments/`
+
+## 9) Common commands
 ```bash
 # From repo root
 source .venv/bin/activate
-cd project
+cd aa_educates
 
 # Run tests (placeholder)
 python3 manage.py test
@@ -90,11 +107,21 @@ python3 manage.py makemigrations
 python3 manage.py migrate
 ```
 
-## 9) Branching workflow (reference)
+## 10) Branching workflow (reference)
 - Feature work on branches (e.g., `main-models`, `venv-setup`).
 - Keep branches separate unless intentionally merged via PR.
 
-## 10) Next steps
-- Switch to Django auth + JWT (SimpleJWT).
-- Add custom actions: enroll, complete lesson, submit quiz.
-- Scaffold Next.js frontend in `client/`.
+## 11) base-schema-0.3 changes
+- Renamed Django project to `aa_educates` (updated settings, urls, wsgi/asgi, manage.py).
+- Introduced modular apps:
+  - `users`: custom `User` with role enum and profile models.
+  - `projects`: `Project`, `StudentProjectSubmission`.
+  - `learning`: moved `Module`, `Resource`, `Workbook`, `WorkbookPurchase` out of `projects`.
+  - `mentorship`: `MentorProfile`, `Session`, `SessionFeedback` (moved Skill/Badge/Certificate out).
+  - `achievements`: new home for `Skill`, `Badge`, `Certificate`.
+  - `community`: `Post`, `Comment`, `GroupChat`, `Message` with generic authors.
+  - `analytics`: `ProgressTracker`, `EngagementLog`, `ImpactReport`.
+  - `payments`: `PaymentTransaction`, `CRMContactLog`.
+- DRF: each app exposes its own router under a top-level prefix (see URLs overview).
+
+Migration note: if you changed `AUTH_USER_MODEL` or moved models between apps, you may need to reset the dev DB or write data migrations.
