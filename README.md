@@ -107,11 +107,34 @@ python3 manage.py makemigrations
 python3 manage.py migrate
 ```
 
-## 10) Branching workflow (reference)
+## 10) Frontend setup (Next.js)
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Frontend runs at `http://localhost:3000`.
+
+**Dependencies** (pinned versions, see `client/package.json`):
+- Next.js 15.1.5
+- React 19.0.0
+- TypeScript 5.7.2
+- Tailwind CSS 3.4.17
+- Axios 1.7.9
+- React Query 5.66.4
+- Zustand 5.0.2
+- React Hook Form 7.54.2
+- Zod 3.24.1
+
+See `client/README.md` for detailed frontend documentation.
+
+## 11) Branching workflow (reference)
 - Feature work on branches (e.g., `main-models`, `venv-setup`).
 - Keep branches separate unless intentionally merged via PR.
 
-## 11) base-schema-0.3 changes
+## 12) base-schema-0.3 changes
 - Renamed Django project to `aa_educates` (updated settings, urls, wsgi/asgi, manage.py).
 - Introduced modular apps:
   - `users`: custom `User` with role enum and profile models.
