@@ -7,9 +7,6 @@ from .views import (
     SchoolProfileViewSet,
     CorporatePartnerProfileViewSet,
     AdminProfileViewSet,
-    BadgeViewSet,
-    CertificateViewSet,
-    SkillViewSet,
 )
 
 router = DefaultRouter()
@@ -19,9 +16,6 @@ router.register(r'parents', ParentProfileViewSet)
 router.register(r'schools', SchoolProfileViewSet)
 router.register(r'corporate-partners', CorporatePartnerProfileViewSet)
 router.register(r'admins', AdminProfileViewSet)
-router.register(r'badges', BadgeViewSet)
-router.register(r'certificates', CertificateViewSet)
-router.register(r'skills', SkillViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

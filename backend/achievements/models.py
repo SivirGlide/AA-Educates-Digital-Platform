@@ -1,5 +1,4 @@
 from django.db import models
-from users.models import StudentProfile, AdminProfile
 
 
 class Skill(models.Model):
@@ -26,8 +25,8 @@ class Certificate(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     file = models.FileField(upload_to='certificates/', blank=True)
-    issued_to = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='certificates_issued')
-    issued_by = models.ForeignKey(AdminProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='certificates_issued')
+    issued_to = models.ForeignKey('users.StudentProfile', on_delete=models.CASCADE, related_name='certificates_issued')
+    issued_by = models.ForeignKey('users.AdminProfile', on_delete=models.SET_NULL, null=True, blank=True, related_name='certificates_issued')
     issue_date = models.DateField()
 
     def __str__(self):

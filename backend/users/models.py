@@ -25,30 +25,6 @@ class User(AbstractUser):
         return self.email or self.username
 
 
-class Badge(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Certificate(models.Model):
-    name = models.CharField(max_length=150)
-    issuer = models.CharField(max_length=150, blank=True)
-    description = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.name
-
-
-class Skill(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return self.name
-
-
 class SchoolProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='school_profile')
     name = models.CharField(max_length=200)
@@ -64,9 +40,9 @@ class StudentProfile(models.Model):
     bio = models.TextField(blank=True)
     cv = models.TextField(blank=True)
     portfolio_link = models.URLField(blank=True)
-    badges = models.ManyToManyField(Badge, blank=True, related_name='students')
-    certificates = models.ManyToManyField(Certificate, blank=True, related_name='students')
-    skills = models.ManyToManyField(Skill, blank=True, related_name='students')
+    badges = models.ManyToManyField('achievements.Badge', blank=True, related_name='students')
+    certificates = models.ManyToManyField('achievements.Certificate', blank=True, related_name='students')
+    skills = models.ManyToManyField('achievements.Skill', blank=True, related_name='students')
 
     def __str__(self):
         return f"StudentProfile({self.user.email})"

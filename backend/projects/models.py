@@ -3,11 +3,11 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 from users.models import (
-    Skill,
     CorporatePartnerProfile,
     AdminProfile,
     StudentProfile,
 )
+from achievements.models import Skill
 
 
 class Project(models.Model):

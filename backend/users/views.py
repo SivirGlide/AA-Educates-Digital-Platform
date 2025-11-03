@@ -6,9 +6,6 @@ from .models import (
     SchoolProfile,
     CorporatePartnerProfile,
     AdminProfile,
-    Badge,
-    Certificate,
-    Skill,
 )
 from .serializers import (
     UserSerializer,
@@ -17,9 +14,6 @@ from .serializers import (
     SchoolProfileSerializer,
     CorporatePartnerProfileSerializer,
     AdminProfileSerializer,
-    BadgeSerializer,
-    CertificateSerializer,
-    SkillSerializer,
 )
 
 
@@ -51,19 +45,4 @@ class CorporatePartnerProfileViewSet(viewsets.ModelViewSet):
 class AdminProfileViewSet(viewsets.ModelViewSet):
     queryset = AdminProfile.objects.all()
     serializer_class = AdminProfileSerializer
-
-
-class BadgeViewSet(viewsets.ModelViewSet):
-    queryset = Badge.objects.all()
-    serializer_class = BadgeSerializer
-
-
-class CertificateViewSet(viewsets.ModelViewSet):
-    queryset = Certificate.objects.all()
-    serializer_class = CertificateSerializer
-
-
-class SkillViewSet(viewsets.ModelViewSet):
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
 

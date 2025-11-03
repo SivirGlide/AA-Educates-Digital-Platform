@@ -6,10 +6,8 @@ from .models import (
     SchoolProfile,
     CorporatePartnerProfile,
     AdminProfile,
-    Badge,
-    Certificate,
-    Skill,
 )
+from achievements.models import Badge, Certificate, Skill
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -39,24 +37,6 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
-
-
-class BadgeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Badge
-        fields = ['id', 'name', 'description']
-
-
-class CertificateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Certificate
-        fields = ['id', 'name', 'issuer', 'description']
-
-
-class SkillSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Skill
-        fields = ['id', 'name']
 
 
 class SchoolProfileSerializer(serializers.ModelSerializer):
