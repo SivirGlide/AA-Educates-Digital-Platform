@@ -27,6 +27,7 @@ pip install -r requirements.txt
 Pinned versions (see `requirements.txt`):
 - Django 5.2.7
 - Django REST Framework 3.15.2
+- drf-spectacular 0.27.2
 - Environs 11.0.0
 
 ## 3) Environment variables (optional)
@@ -49,15 +50,15 @@ python3 manage.py runserver
 Server runs at `http://127.0.0.1:8000/`.
 
 ## 5) Quick API smoke test
-Use the browsable API at `/` or curl examples:
+Use Swagger UI at `/api/docs/` or curl examples:
 ```bash
 # Example: create a user (minimal) then list users
-curl -sS -X POST http://127.0.0.1:8000/users/users/ \
+curl -sS -X POST http://127.0.0.1:8000/api/users/users/ \
   -H "Content-Type: application/json" \
   -d '{"username":"alice","email":"alice@example.com","password":"Passw0rd!","first_name":"Alice","last_name":"A"}'
 
 # List users
-curl -sS http://127.0.0.1:8000/users/users/
+curl -sS http://127.0.0.1:8000/api/users/users/
 ```
 
 ## 6) Admin access (optional)
@@ -80,18 +81,19 @@ AA-Educates-Digital-Platform/
     analytics/              # ProgressTracker, EngagementLog, ImpactReport
     payments/               # PaymentTransaction, CRMContactLog
     manage.py
-  client/                   # Frontend (Next.js) placeholder
+  client/                   # Frontend placeholder (currently empty)
 ```
 
-## 8) URLs overview (prefixes)
-- Users: `/users/`
-- Projects: `/projects/`
-- Learning: `/learning/`
-- Mentorship: `/mentorship/`
-- Achievements: `/achievements/`
-- Community: `/community/`
-- Analytics: `/analytics/`
-- Payments: `/payments/`
+## 8) URLs overview (prefixes with `/api/` prefix)
+- API Documentation: `/api/docs/` (Swagger UI), `/api/redoc/` (ReDoc)
+- Users: `/api/users/`
+- Projects: `/api/projects/`
+- Learning: `/api/learning/`
+- Mentorship: `/api/mentorship/`
+- Achievements: `/api/achievements/`
+- Community: `/api/community/`
+- Analytics: `/api/analytics/`
+- Payments: `/api/payments/`
 
 ## 9) Common commands
 ```bash
@@ -113,6 +115,9 @@ python3 manage.py migrate
 
 ## 11) base-schema-0.3 changes
 - Renamed Django project folder to `backend` (updated settings, urls, wsgi/asgi, manage.py).
+- Using SQLite database (default Django database for development).
+- Removed client folder contents (Next.js app removed).
+- Removed django-cors-headers and djangorestframework-simplejwt (no CORS or JWT authentication on this branch).
 - Introduced modular apps:
   - `users`: custom `User` with role enum and profile models.
   - `projects`: `Project`, `StudentProjectSubmission`.
