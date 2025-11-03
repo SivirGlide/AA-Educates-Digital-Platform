@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 const Login: NextPage = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   });
   const [error, setError] = useState('');
@@ -18,8 +18,7 @@ const Login: NextPage = () => {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call to Django backend
-      const response = await fetch('http://127.0.0.1:8000/api/auth/login/', {
+      const response = await fetch('http://127.0.0.1:8000/api/users/auth/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,14 +26,34 @@ const Login: NextPage = () => {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
-        // TODO: Store token in context/cookies
-        localStorage.setItem('token', data.access);
+        // Store tokens and user info
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userId', data.user.id.toString());
+        localStorage.setItem('userRole', data.user.role);
+        if (data.user.profile_id) {
+          localStorage.setItem('profileId', data.user.profile_id.toString());
+        }
+
         // Redirect based on user role
-        router.push('/student/dashboard'); // Will be dynamic based on user role
+        const role = data.user.role.toLowerCase();
+        if (role === 'student') {
+          router.push('/student/dashboard');
+        } else if (role === 'corporate_partner') {
+          router.push('/corporate/dashboard');
+        } else if (role === 'parent') {
+          router.push('/parent/dashboard');
+        } else if (role === 'admin') {
+          router.push('/admin/dashboard');
+        } else {
+          router.push('/');
+        }
       } else {
-        setError('Invalid username or password');
+        setError(data.error || 'Invalid email or password');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -74,14 +93,14 @@ const Login: NextPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
               </label>
               <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username}
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"

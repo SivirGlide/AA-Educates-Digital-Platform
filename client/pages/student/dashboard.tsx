@@ -34,8 +34,18 @@ const StudentDashboard: NextPage = () => {
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        // Fetch student profile with ID 1
-        const studentResponse = await api.getStudent(1);
+        // Get profile ID from localStorage (set during login)
+        const profileId = localStorage.getItem('profileId');
+        const userId = localStorage.getItem('userId');
+        
+        if (!profileId || !userId) {
+          setError('Please login to access your dashboard');
+          setLoading(false);
+          return;
+        }
+
+        // Fetch student profile using authenticated user's profile ID
+        const studentResponse = await api.getStudent(parseInt(profileId));
         if (studentResponse.error) {
           setError(studentResponse.error);
           setLoading(false);
@@ -46,7 +56,7 @@ const StudentDashboard: NextPage = () => {
           setStudent(studentResponse.data);
           
           // Fetch user data
-          const userResponse = await api.getUser(studentResponse.data.user);
+          const userResponse = await api.getUser(parseInt(userId));
           if (userResponse.data) {
             setUser(userResponse.data);
           }

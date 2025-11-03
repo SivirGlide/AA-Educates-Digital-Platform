@@ -63,8 +63,18 @@ const CorporateDashboard: NextPage = () => {
 
   const fetchCorporateData = async () => {
     try {
-      // Fetch corporate partner with ID 1
-      const corporateResponse = await api.getCorporatePartner(1);
+      // Get profile ID from localStorage (set during login)
+      const profileId = localStorage.getItem('profileId');
+      const userId = localStorage.getItem('userId');
+      
+      if (!profileId || !userId) {
+        setError('Please login to access your dashboard');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch corporate partner using authenticated user's profile ID
+      const corporateResponse = await api.getCorporatePartner(parseInt(profileId));
       if (corporateResponse.error) {
         setError(corporateResponse.error);
         setLoading(false);
@@ -75,7 +85,7 @@ const CorporateDashboard: NextPage = () => {
         setCorporate(corporateResponse.data);
         
         // Fetch user data
-        const userResponse = await api.getUser(corporateResponse.data.user);
+        const userResponse = await api.getUser(parseInt(userId));
         if (userResponse.data) {
           setUser(userResponse.data);
         }
@@ -91,9 +101,10 @@ const CorporateDashboard: NextPage = () => {
     try {
       const response = await api.getProjects();
       if (response.data) {
-        // Filter projects created by this corporate partner (ID 1)
+        // Filter projects created by this corporate partner (from localStorage)
+        const profileId = parseInt(localStorage.getItem('profileId') || '0');
         const corporateProjects = Array.isArray(response.data) 
-          ? response.data.filter((p: Project) => p.created_by === 1)
+          ? response.data.filter((p: Project) => p.created_by === profileId)
           : [];
         setProjects(corporateProjects);
       }
@@ -105,9 +116,10 @@ const CorporateDashboard: NextPage = () => {
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const profileId = parseInt(localStorage.getItem('profileId') || '0');
       const projectData = {
         ...projectForm,
-        created_by: 1, // Corporate partner ID 1
+        created_by: profileId, // Authenticated corporate partner ID
         skills_required: projectForm.skills_required,
       };
       

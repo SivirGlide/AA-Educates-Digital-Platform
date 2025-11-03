@@ -73,8 +73,18 @@ const ParentDashboard: NextPage = () => {
 
   const fetchParentData = async () => {
     try {
-      // Fetch parent profile with ID 1
-      const parentResponse = await api.getParent(1);
+      // Get profile ID from localStorage (set during login)
+      const profileId = localStorage.getItem('profileId');
+      const userId = localStorage.getItem('userId');
+      
+      if (!profileId || !userId) {
+        setError('Please login to access your dashboard');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch parent profile using authenticated user's profile ID
+      const parentResponse = await api.getParent(parseInt(profileId));
       if (parentResponse.error) {
         setError(parentResponse.error);
         setLoading(false);
@@ -85,7 +95,7 @@ const ParentDashboard: NextPage = () => {
         setParent(parentResponse.data);
         
         // Fetch user data
-        const userResponse = await api.getUser(parentResponse.data.user);
+        const userResponse = await api.getUser(parseInt(userId));
         if (userResponse.data) {
           setUser(userResponse.data);
         }
