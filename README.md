@@ -36,12 +36,12 @@ The project can run with defaults. If you prefer `.env`:
 DEBUG=True
 SECRET_KEY=change-me
 ```
-If you add `.env`, wire it in `aa_educates/aa_educates/settings.py` using `environs` (already installed).
+If you add `.env`, wire it in `backend/backend/settings.py` using `environs` (already installed).
 
-## 4) Apply migrations and run the server (aa_educates)
-From the `aa_educates/` directory:
+## 4) Apply migrations and run the server
+From the `backend/` directory:
 ```bash
-cd aa_educates
+cd backend
 python3 manage.py makemigrations
 python3 manage.py migrate
 python3 manage.py runserver
@@ -69,8 +69,8 @@ python3 manage.py createsuperuser
 ## 7) Project structure (base-schema-0.3)
 ```
 AA-Educates-Digital-Platform/
-  aa_educates/
-    aa_educates/            # Django project settings/urls/wsgi/asgi
+  backend/
+    backend/                # Django project settings/urls/wsgi/asgi
     users/                  # Custom User + Profiles (Student/Parent/School/Corporate/Admin)
     projects/               # Projects and StudentProjectSubmission
     learning/               # Module, Resource, Workbook, WorkbookPurchase
@@ -97,7 +97,7 @@ AA-Educates-Digital-Platform/
 ```bash
 # From repo root
 source .venv/bin/activate
-cd aa_educates
+cd backend
 
 # Run tests (placeholder)
 python3 manage.py test
@@ -112,7 +112,7 @@ python3 manage.py migrate
 - Keep branches separate unless intentionally merged via PR.
 
 ## 11) base-schema-0.3 changes
-- Renamed Django project to `aa_educates` (updated settings, urls, wsgi/asgi, manage.py).
+- Renamed Django project folder to `backend` (updated settings, urls, wsgi/asgi, manage.py).
 - Introduced modular apps:
   - `users`: custom `User` with role enum and profile models.
   - `projects`: `Project`, `StudentProjectSubmission`.
