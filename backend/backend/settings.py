@@ -142,10 +142,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-    # Allow both authenticated and unauthenticated access for development/testing
-    # Authenticated users get full access, unauthenticated can also do CRUD for testing
+    # Require authentication for all API endpoints by default
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 

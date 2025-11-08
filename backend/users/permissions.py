@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from .models import User
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -9,7 +10,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user and request.user.is_authenticated and (
-            request.user.is_staff or request.user.role == 'ADMIN'
+            request.user.is_staff or request.user.role == User.ADMIN
         )
 
 
@@ -17,9 +18,14 @@ class IsOwnerOrAdmin(permissions.BasePermission):
     """
     Custom permission: Users can only access their own data, admins can access all.
     """
+    def has_permission(self, request, view):
+        # Allow authenticated users to access the view
+        # Object-level permissions will be checked in has_object_permission
+        return request.user and request.user.is_authenticated
+    
     def has_object_permission(self, request, view, obj):
         # Admin can do anything
-        if request.user.is_staff or request.user.role == 'ADMIN':
+        if request.user.is_staff or request.user.role == User.ADMIN:
             return True
         
         # Check if object has user attribute
@@ -36,11 +42,41 @@ class IsOwnerOrAdmin(permissions.BasePermission):
 class IsStudentOwner(permissions.BasePermission):
     """
     Permission for StudentProfile: Student can view/edit own profile, admins can do all.
+    Parents and schools can view linked students.
     """
+    def has_permission(self, request, view):
+        # Allow authenticated users - queryset filtering will restrict access
+        # Students, parents, schools, and admins can access student profiles
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        user_role = request.user.role
+        allowed_roles = [User.STUDENT, User.PARENT, User.SCHOOL, User.ADMIN]
+        return user_role in allowed_roles or request.user.is_staff
+    
     def has_object_permission(self, request, view, obj):
-        if request.user.is_staff or request.user.role == 'ADMIN':
+        if request.user.is_staff or request.user.role == User.ADMIN:
             return True
-        return obj.user == request.user
+        
+        # Students can access their own profile
+        if request.user.role == User.STUDENT:
+            return obj.user == request.user
+        
+        # Parents can access their linked students
+        if request.user.role == User.PARENT:
+            parent_profile = getattr(request.user, 'parent_profile', None)
+            if parent_profile:
+                return obj in parent_profile.students.all()
+            return False
+        
+        # Schools can access their students
+        if request.user.role == User.SCHOOL:
+            school_profile = getattr(request.user, 'school_profile', None)
+            if school_profile:
+                return obj.school == school_profile
+            return False
+        
+        return False
 
 
 class IsCorporatePartnerOrAdmin(permissions.BasePermission):
@@ -78,22 +114,70 @@ class RoleBasedPermission(permissions.BasePermission):
 
 class IsStudentRole(RoleBasedPermission):
     """Only students and admins can access."""
-    allowed_roles = ['STUDENT', 'ADMIN']
+    allowed_roles = [User.STUDENT, User.ADMIN]
 
 
 class IsParentRole(RoleBasedPermission):
     """Only parents and admins can access."""
-    allowed_roles = ['PARENT', 'ADMIN']
+    allowed_roles = [User.PARENT, User.ADMIN]
 
 
 class IsCorporatePartnerRole(RoleBasedPermission):
     """Only corporate partners and admins can access."""
-    allowed_roles = ['CORPORATE_PARTNER', 'ADMIN']
+    allowed_roles = [User.CORPORATE_PARTNER, User.ADMIN]
 
 
 class IsSchoolRole(RoleBasedPermission):
     """Only schools and admins can access."""
-    allowed_roles = ['SCHOOL', 'ADMIN']
+    allowed_roles = [User.SCHOOL, User.ADMIN]
+
+
+class IsOwnerOrRoleOrAdmin(permissions.BasePermission):
+    """
+    Permission that allows access if user owns the object, has the required role, or is an admin.
+    Used for profile viewsets to restrict access by role.
+    """
+    required_role = None
+    
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        # Admins can always access
+        if request.user.is_staff or request.user.role == 'ADMIN':
+            return True
+        
+        # Check if user has the required role
+        if self.required_role:
+            return request.user.role == self.required_role
+        
+        return True
+    
+    def has_object_permission(self, request, view, obj):
+        # Admin can do anything
+        if request.user.is_staff or request.user.role == User.ADMIN:
+            return True
+        
+        # Check if object has user attribute and user owns it
+        if hasattr(obj, 'user'):
+            return obj.user == request.user
+        
+        return False
+
+
+class IsParentProfileOwner(IsOwnerOrRoleOrAdmin):
+    """Only parents (owning their profile) and admins can access."""
+    required_role = User.PARENT
+
+
+class IsCorporatePartnerProfileOwner(IsOwnerOrRoleOrAdmin):
+    """Only corporate partners (owning their profile) and admins can access."""
+    required_role = User.CORPORATE_PARTNER
+
+
+class IsSchoolProfileOwner(IsOwnerOrRoleOrAdmin):
+    """Only schools (owning their profile) and admins can access."""
+    required_role = User.SCHOOL
 
 
 class IsAuthorOrAdmin(permissions.BasePermission):
@@ -107,7 +191,7 @@ class IsAuthorOrAdmin(permissions.BasePermission):
             return True
         
         # Admin can do anything
-        if request.user.is_staff or request.user.role == 'ADMIN':
+        if request.user.is_staff or request.user.role == User.ADMIN:
             return True
         
         # Check if object has author GenericForeignKey

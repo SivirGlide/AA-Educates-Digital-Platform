@@ -1,0 +1,2 @@
+# Django management module
+
