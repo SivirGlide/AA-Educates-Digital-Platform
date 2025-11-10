@@ -43,6 +43,9 @@ const CorporateDashboard: NextPage = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [deletingProject, setDeletingProject] = useState<number | null>(null);
   
   // Project CRUD states
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -55,6 +58,14 @@ const CorporateDashboard: NextPage = () => {
     end_date: '',
     skills_required: [] as number[],
   });
+
+  // Auto-hide success messages
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   useEffect(() => {
     fetchCorporateData();
@@ -81,14 +92,18 @@ const CorporateDashboard: NextPage = () => {
         return;
       }
 
-      if (corporateResponse.data) {
-        setCorporate(corporateResponse.data);
+      if (corporateResponse.data && typeof corporateResponse.data === 'object' && 'id' in corporateResponse.data) {
+        setCorporate(corporateResponse.data as CorporatePartnerProfile);
         
         // Fetch user data
         const userResponse = await api.getUser(parseInt(userId));
-        if (userResponse.data) {
-          setUser(userResponse.data);
+        if (userResponse.data && typeof userResponse.data === 'object' && 'id' in userResponse.data) {
+          setUser(userResponse.data as User);
+        } else {
+          console.error('Failed to fetch user data:', userResponse.error);
         }
+      } else {
+        console.error('Failed to fetch corporate data:', corporateResponse.error);
       }
     } catch (err) {
       setError('Failed to load corporate partner data');
@@ -115,19 +130,44 @@ const CorporateDashboard: NextPage = () => {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreatingProject(true);
+    setError(null);
+    
     try {
       const profileId = parseInt(localStorage.getItem('profileId') || '0');
-      const projectData = {
-        ...projectForm,
-        created_by: profileId, // Authenticated corporate partner ID
+      
+      if (!profileId) {
+        setError('Corporate partner profile not found. Please login again.');
+        setCreatingProject(false);
+        return;
+      }
+
+      // Prepare project data - only include dates if they're provided
+      const projectData: any = {
+        title: projectForm.title.trim(),
+        description: projectForm.description.trim(),
+        status: projectForm.status,
+        created_by: profileId,
         skills_required: projectForm.skills_required,
       };
+
+      // Only include dates if they're provided
+      if (projectForm.start_date) {
+        projectData.start_date = projectForm.start_date;
+      }
+      if (projectForm.end_date) {
+        projectData.end_date = projectForm.end_date;
+      }
       
       const response = await api.createProject(projectData);
       if (response.error) {
-        alert(`Error creating project: ${response.error}`);
+        setError(`Error creating project: ${response.error}`);
+        setCreatingProject(false);
         return;
       }
+      
+      // Success!
+      setSuccessMessage('Project created successfully!');
       
       // Reset form and refresh projects
       setProjectForm({
@@ -139,9 +179,12 @@ const CorporateDashboard: NextPage = () => {
         skills_required: [],
       });
       setShowCreateForm(false);
-      fetchProjects();
+      await fetchProjects();
     } catch (err) {
-      alert('Failed to create project');
+      setError('Failed to create project. Please try again.');
+      console.error('Create project error:', err);
+    } finally {
+      setCreatingProject(false);
     }
   };
 
@@ -149,19 +192,34 @@ const CorporateDashboard: NextPage = () => {
     e.preventDefault();
     if (!editingProject) return;
 
+    setCreatingProject(true);
+    setError(null);
+
     try {
-      const projectData = {
-        ...projectForm,
+      const projectData: any = {
+        title: projectForm.title.trim(),
+        description: projectForm.description.trim(),
+        status: projectForm.status,
         created_by: editingProject.created_by,
         skills_required: projectForm.skills_required,
       };
+
+      // Only include dates if they're provided
+      if (projectForm.start_date) {
+        projectData.start_date = projectForm.start_date;
+      }
+      if (projectForm.end_date) {
+        projectData.end_date = projectForm.end_date;
+      }
       
       const response = await api.updateProject(editingProject.id, projectData);
       if (response.error) {
-        alert(`Error updating project: ${response.error}`);
+        setError(`Error updating project: ${response.error}`);
+        setCreatingProject(false);
         return;
       }
       
+      setSuccessMessage('Project updated successfully!');
       setEditingProject(null);
       setProjectForm({
         title: '',
@@ -171,39 +229,62 @@ const CorporateDashboard: NextPage = () => {
         end_date: '',
         skills_required: [],
       });
-      fetchProjects();
+      setShowCreateForm(false);
+      await fetchProjects();
     } catch (err) {
-      alert('Failed to update project');
+      setError('Failed to update project. Please try again.');
+      console.error('Update project error:', err);
+    } finally {
+      setCreatingProject(false);
     }
   };
 
   const handleDeleteProject = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this project?')) return;
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingProject(id);
+    setError(null);
 
     try {
       const response = await api.deleteProject(id);
       if (response.error) {
-        alert(`Error deleting project: ${response.error}`);
+        setError(`Error deleting project: ${response.error}`);
+        setDeletingProject(null);
         return;
       }
       
-      fetchProjects();
+      setSuccessMessage('Project deleted successfully!');
+      await fetchProjects();
     } catch (err) {
-      alert('Failed to delete project');
+      setError('Failed to delete project. Please try again.');
+      console.error('Delete project error:', err);
+    } finally {
+      setDeletingProject(null);
     }
   };
 
   const startEditing = (project: Project) => {
     setEditingProject(project);
+    setError(null);
+    // Format dates for date input (YYYY-MM-DD)
+    const formatDate = (dateString: string | null) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    };
     setProjectForm({
       title: project.title,
       description: project.description,
       status: project.status,
-      start_date: project.start_date || '',
-      end_date: project.end_date || '',
+      start_date: formatDate(project.start_date),
+      end_date: formatDate(project.end_date),
       skills_required: project.skills_required || [],
     });
     setShowCreateForm(true);
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const cancelForm = () => {
@@ -246,16 +327,55 @@ const CorporateDashboard: NextPage = () => {
         </nav>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-green-800 font-medium">{successMessage}</p>
+              </div>
+              <button
+                onClick={() => setSuccessMessage(null)}
+                className="text-green-600 hover:text-green-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Error Message - Only show if not loading and it's not the initial load error */}
+          {error && !loading && corporate && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-red-800 font-medium">{error}</p>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
             </div>
-          ) : error ? (
+          ) : error && !corporate ? (
             <div className="max-w-2xl mx-auto mt-12">
               <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
                 <h3 className="text-xl font-semibold text-red-800 mb-2">Error Loading Data</h3>
                 <p className="text-red-600">{error}</p>
-                <p className="text-sm text-red-500 mt-2">Corporate Partner ID 2 may not exist in the database.</p>
               </div>
             </div>
           ) : corporate && user ? (
@@ -429,14 +549,26 @@ const CorporateDashboard: NextPage = () => {
                       <div className="flex space-x-4">
                         <button
                           type="submit"
-                          className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+                          disabled={creatingProject}
+                          className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                         >
-                          {editingProject ? 'Update Project' : 'Create Project'}
+                          {creatingProject ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              {editingProject ? 'Updating...' : 'Creating...'}
+                            </>
+                          ) : (
+                            editingProject ? 'Update Project' : 'Create Project'
+                          )}
                         </button>
                         <button
                           type="button"
                           onClick={cancelForm}
-                          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all"
+                          disabled={creatingProject}
+                          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Cancel
                         </button>
@@ -482,15 +614,27 @@ const CorporateDashboard: NextPage = () => {
                           <div className="flex space-x-2 mt-4">
                             <button
                               onClick={() => startEditing(project)}
-                              className="flex-1 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors text-sm"
+                              disabled={deletingProject === project.id}
+                              className="flex-1 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteProject(project.id)}
-                              className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 transition-colors text-sm"
+                              disabled={deletingProject === project.id || creatingProject}
+                              className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                             >
-                              Delete
+                              {deletingProject === project.id ? (
+                                <>
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Deleting...
+                                </>
+                              ) : (
+                                'Delete'
+                              )}
                             </button>
                           </div>
                         </div>
