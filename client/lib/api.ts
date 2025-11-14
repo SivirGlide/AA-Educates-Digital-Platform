@@ -16,9 +16,9 @@ async function fetchApi<T>(
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     
     // Prepare headers
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string> || {}),
     };
     
     // Add authorization header if token exists

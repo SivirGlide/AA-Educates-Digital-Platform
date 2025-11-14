@@ -3,6 +3,27 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
+import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Badge } from '@/src/components/ui/badge';
+import { Button } from '@/src/components/ui/button';
+import { cn } from '@/lib/utils';
+import { 
+  Award, 
+  GraduationCap, 
+  Users, 
+  BookOpen, 
+  FileText, 
+  BarChart3,
+  Sparkles,
+  ArrowRight,
+  CheckCircle2,
+  Circle,
+  Clock,
+  Calendar,
+  Trophy,
+  Star
+} from 'lucide-react';
 
 interface StudentProfile {
   id: number;
@@ -25,11 +46,41 @@ interface User {
   role: string;
 }
 
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  due_date?: string;
+  status?: string;
+  created_at?: string;
+}
+
+interface Achievement {
+  id: number;
+  name: string;
+  description?: string;
+  type: 'badge' | 'certificate' | 'skill';
+  earned_at?: string;
+}
+
 const StudentDashboard: NextPage = () => {
   const [student, setStudent] = useState<StudentProfile | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  
+  // Calculate student level based on achievements
+  const calculateLevel = () => {
+    const totalAchievements = achievements.length;
+    if (totalAchievements >= 20) return 'Expert';
+    if (totalAchievements >= 15) return 'Advanced';
+    if (totalAchievements >= 10) return 'Intermediate';
+    if (totalAchievements >= 5) return 'Beginner';
+    return 'Starter';
+  };
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -53,12 +104,12 @@ const StudentDashboard: NextPage = () => {
         }
 
         if (studentResponse.data) {
-          setStudent(studentResponse.data);
+          setStudent(studentResponse.data as StudentProfile);
           
           // Fetch user data
           const userResponse = await api.getUser(parseInt(userId));
           if (userResponse.data) {
-            setUser(userResponse.data);
+            setUser(userResponse.data as User);
           }
         }
       } catch (err) {
@@ -68,7 +119,59 @@ const StudentDashboard: NextPage = () => {
       }
     };
 
+    const fetchTasksAndAchievements = async () => {
+      try {
+        setLoadingTasks(true);
+        
+        // Fetch projects/tasks
+        const projectsResponse = await api.getProjects();
+        if (projectsResponse.data) {
+          const projectsData = Array.isArray(projectsResponse.data) 
+            ? projectsResponse.data 
+            : (projectsResponse.data as any).results || [];
+          setProjects(projectsData.slice(0, 5) as Project[]); // Show latest 5
+        }
+
+        // Fetch achievements (badges, certificates, skills)
+        const [badgesResponse, certificatesResponse, skillsResponse] = await Promise.all([
+          api.getBadges(),
+          api.getCertificates(),
+          api.getSkills(),
+        ]);
+
+        const achievementsList: Achievement[] = [];
+        
+        if (badgesResponse.data) {
+          const badges = Array.isArray(badgesResponse.data) 
+            ? badgesResponse.data 
+            : (badgesResponse.data as any).results || [];
+          achievementsList.push(...badges.map((b: any) => ({ ...b, type: 'badge' as const })));
+        }
+        
+        if (certificatesResponse.data) {
+          const certificates = Array.isArray(certificatesResponse.data) 
+            ? certificatesResponse.data 
+            : (certificatesResponse.data as any).results || [];
+          achievementsList.push(...certificates.map((c: any) => ({ ...c, type: 'certificate' as const })));
+        }
+        
+        if (skillsResponse.data) {
+          const skills = Array.isArray(skillsResponse.data) 
+            ? skillsResponse.data 
+            : (skillsResponse.data as any).results || [];
+          achievementsList.push(...skills.map((s: any) => ({ ...s, type: 'skill' as const })));
+        }
+
+        setAchievements(achievementsList.slice(0, 6)); // Show latest 6
+      } catch (err) {
+        console.error('Failed to load tasks and achievements:', err);
+      } finally {
+        setLoadingTasks(false);
+      }
+    };
+
     fetchStudentData();
+    fetchTasksAndAchievements();
   }, []);
 
   return (
@@ -78,260 +181,366 @@ const StudentDashboard: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        {/* Navigation */}
-        <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              AA Educates
-            </Link>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700 font-medium">Student Portal</span>
-              <Link 
-                href="/login" 
-                className="px-4 py-2 text-indigo-600 hover:text-indigo-700 font-medium hover:bg-indigo-50 rounded-lg transition-colors"
-              >
-                Logout
-              </Link>
-            </div>
-          </div>
-        </nav>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : error ? (
             <div className="max-w-2xl mx-auto mt-12">
-              <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-                <h3 className="text-xl font-semibold text-red-800 mb-2">Error Loading Data</h3>
-                <p className="text-red-600">{error}</p>
-              </div>
+              <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="text-destructive">Error Loading Data</CardTitle>
+                  <CardDescription className="text-destructive">{error}</CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           ) : student && user ? (
             <>
               {/* Student Profile Header */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-blue-100">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-                      Welcome, {user.first_name || user.username}!
-                    </h1>
-                    <p className="text-xl text-gray-600">
-                      {user.email}
-                    </p>
-                    {student.bio && (
-                      <p className="text-gray-700 mt-4 max-w-2xl">{student.bio}</p>
-                    )}
-                  </div>
-                  <div className="mt-4 md:mt-0">
-                    <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                      Student ID: {student.id}
-                    </div>
-                  </div>
-                </div>
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle className="text-4xl md:text-5xl mb-2">
+                    Welcome, {user.first_name || user.username}!
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-blue-700 mb-1">Badges</p>
-                        <p className="text-3xl font-bold text-blue-900">{student.badges?.length || 0}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="bg-primary/10 border-primary/20">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-primary mb-1">Badges</p>
+                            <p className="text-3xl font-bold text-primary">{student.badges?.length || 0}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                            <Award className="h-6 w-6 text-primary-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-green-700 mb-1">Certificates</p>
-                        <p className="text-3xl font-bold text-green-900">{student.certificates?.length || 0}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
+                    <Card className="bg-secondary/10 border-secondary/20">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-secondary mb-1">Certificates</p>
+                            <p className="text-3xl font-bold text-secondary">{student.certificates?.length || 0}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
+                            <GraduationCap className="h-6 w-6 text-secondary-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-purple-700 mb-1">Skills</p>
-                        <p className="text-3xl font-bold text-purple-900">{student.skills?.length || 0}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                      </div>
+                    <Card className="bg-accent/10 border-accent/20">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-accent mb-1">Skills</p>
+                            <p className="text-3xl font-bold text-accent">{student.skills?.length || 0}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
+                            <Sparkles className="h-6 w-6 text-accent-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Tasks and Achievements Module */}
+              <Card className="mb-8">
+                <CardHeader>
+                  <div className="flex items-start gap-4">
+                    {/* Icon */}
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Trophy className="h-6 w-6 text-primary" />
+                    </div>
+                    
+                    {/* Title and Level */}
+                    <div className="flex-1">
+                      <CardTitle className="mb-1">Projects</CardTitle>
+                      <CardDescription className="text-xs">
+                        Level: {calculateLevel()}
+                      </CardDescription>
                     </div>
                   </div>
-                </div>
-              </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Tasks Section */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-sm">Tasks</h3>
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href="/student/projects">
+                            View All
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                      {loadingTasks ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        </div>
+                      ) : projects.length > 0 ? (
+                        <div className="space-y-3">
+                          {projects.map((project) => (
+                            <div
+                              key={project.id}
+                              className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer group"
+                            >
+                              <div className="mt-0.5">
+                                {project.status === 'completed' ? (
+                                  <CheckCircle2 className="h-5 w-5 text-secondary" />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                                  {project.title}
+                                </h4>
+                                {project.description && (
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                    {project.description}
+                                  </p>
+                                )}
+                                {project.due_date && (
+                                  <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>
+                                      {new Date(project.due_date).toLocaleDateString('en-GB', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                      })}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p className="text-sm">No tasks available</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Achievements Section */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-sm">Achievements</h3>
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href="/student/certificates">
+                            View All
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                      {loadingTasks ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent"></div>
+                        </div>
+                      ) : achievements.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3">
+                          {achievements.map((achievement) => (
+                            <div
+                              key={achievement.id}
+                              className="flex flex-col items-center p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer group"
+                            >
+                              <div className={cn(
+                                "w-12 h-12 rounded-full flex items-center justify-center mb-2",
+                                achievement.type === 'badge' && "bg-primary/10 group-hover:bg-primary/20",
+                                achievement.type === 'certificate' && "bg-secondary/10 group-hover:bg-secondary/20",
+                                achievement.type === 'skill' && "bg-accent/10 group-hover:bg-accent/20"
+                              )}>
+                                {achievement.type === 'badge' && (
+                                  <Award className={cn(
+                                    "h-6 w-6",
+                                    "text-primary"
+                                  )} />
+                                )}
+                                {achievement.type === 'certificate' && (
+                                  <GraduationCap className={cn(
+                                    "h-6 w-6",
+                                    "text-secondary"
+                                  )} />
+                                )}
+                                {achievement.type === 'skill' && (
+                                  <Star className={cn(
+                                    "h-6 w-6",
+                                    "text-accent"
+                                  )} />
+                                )}
+                              </div>
+                              <h4 className="font-medium text-xs text-center group-hover:text-primary transition-colors line-clamp-2">
+                                {achievement.name}
+                              </h4>
+                              {achievement.earned_at && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(achievement.earned_at).toLocaleDateString('en-GB', {
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <Trophy className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                          <p className="text-sm">No achievements yet</p>
+                          <p className="text-xs mt-1">Complete tasks to earn achievements!</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Dashboard Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-blue-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-primary/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                      <FileText className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                      My Projects
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle>My Projects</CardTitle>
+                    <CardDescription>
                       View and manage your projects, track submissions, and see feedback
-                    </p>
-                    <div className="flex items-center text-blue-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      View Projects
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-primary">
+                      <Link href="/student/projects">
+                        View Projects
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-green-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                      </svg>
+                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-secondary/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+                      <Award className="h-6 w-6 text-secondary" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
-                      Achievements
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle>Achievements</CardTitle>
+                    <CardDescription>
                       Your badges, certificates, and skills earned throughout your journey
-                    </p>
-                    <div className="flex items-center text-green-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      View Achievements
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-secondary">
+                      <Link href="/student/certificates">
+                        View Achievements
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-purple-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
+                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-accent/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                      <Users className="h-6 w-6 text-accent" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
-                      Mentorship
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle>Mentorship</CardTitle>
+                    <CardDescription>
                       Connect with mentors, schedule sessions, and get personalized guidance
-                    </p>
-                    <div className="flex items-center text-purple-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      View Sessions
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-accent">
+                      <Link href="/student/mentoring">
+                        View Sessions
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-indigo-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
+                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-primary/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                      <BookOpen className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
-                      Learning
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle>Learning</CardTitle>
+                    <CardDescription>
                       Browse modules, access resources, and purchase workbooks to enhance your skills
-                    </p>
-                    <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      Browse Learning
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-primary">
+                      <Link href="/student/resources">
+                        Browse Learning
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-pink-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
+                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-secondary/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+                      <Users className="h-6 w-6 text-secondary" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-pink-600 transition-colors">
-                      Community
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle>Community</CardTitle>
+                    <CardDescription>
                       Engage with posts, comments, and group chats to connect with peers
-                    </p>
-                    <div className="flex items-center text-pink-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      Visit Community
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-secondary">
+                      <Link href="/student/community">
+                        Visit Community
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-cyan-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
+                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-accent/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                      <BarChart3 className="h-6 w-6 text-accent" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-cyan-600 transition-colors">
-                      Progress
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle>Progress</CardTitle>
+                    <CardDescription>
                       Track your learning progress, engagement metrics, and view detailed analytics
-                    </p>
-                    <div className="flex items-center text-cyan-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      View Analytics
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-accent">
+                      <Link href="/student/skills">
+                        View Analytics
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </>
           ) : (
-            <div className="max-w-2xl mx-auto mt-12">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-                <h3 className="text-xl font-semibold text-yellow-800 mb-2">No Student Found</h3>
-                <p className="text-yellow-600">Student with ID 1 does not exist in the database.</p>
-              </div>
-            </div>
+            <Card className="max-w-2xl mx-auto mt-12 border-yellow-200">
+              <CardHeader>
+                <CardTitle className="text-yellow-800">No Student Found</CardTitle>
+                <CardDescription className="text-yellow-600">
+                  Student profile does not exist in the database.
+                </CardDescription>
+              </CardHeader>
+            </Card>
           )}
-        </div>
-      </main>
+      </DashboardLayout>
     </>
   );
 };

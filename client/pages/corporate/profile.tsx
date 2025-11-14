@@ -86,8 +86,12 @@ const CorporateProfilePage: NextPage = () => {
         const response = await api.getCorporatePartner(profileId);
         if (response.error) {
           setError(response.error);
-        } else {
-          setProfile({ ...response.data, about: response.data?.about || '' } as CorporateProfile);
+        } else if (response.data) {
+          const data = response.data as any;
+          setProfile({
+            ...data,
+            about: data?.about || '',
+          } as CorporateProfile);
         }
       } catch (err) {
         setError('Unable to load corporate profile.');

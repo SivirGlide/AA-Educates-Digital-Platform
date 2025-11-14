@@ -87,7 +87,8 @@ const ParentCertificatesPage: NextPage = () => {
           return;
         }
 
-        const childIds: number[] = parentResponse.data.students || [];
+        const parentData = parentResponse.data as any;
+        const childIds: number[] = parentData?.students || [];
         const certificatesResponse = await api.getCertificates();
         if (certificatesResponse.error || !Array.isArray(certificatesResponse.data)) {
           setError(certificatesResponse.error || 'Unable to load certificates');

@@ -92,12 +92,12 @@ const ParentDashboard: NextPage = () => {
       }
 
       if (parentResponse.data) {
-        setParent(parentResponse.data);
+        setParent(parentResponse.data as ParentProfile);
         
         // Fetch user data
         const userResponse = await api.getUser(parseInt(userId));
         if (userResponse.data) {
-          setUser(userResponse.data);
+          setUser(userResponse.data as User);
         }
       }
     } catch (err) {
@@ -114,7 +114,8 @@ const ParentDashboard: NextPage = () => {
       const childrenPromises = parent.students.map(async (studentId) => {
         const studentResponse = await api.getStudent(studentId);
         if (studentResponse.data) {
-          const userResponse = await api.getUser(studentResponse.data.user);
+          const studentData = studentResponse.data as any;
+          const userResponse = await api.getUser(studentData.user);
           return {
             student: studentResponse.data,
             user: userResponse.data || null,
