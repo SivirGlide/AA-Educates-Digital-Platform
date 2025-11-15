@@ -82,14 +82,41 @@ class IsStudentOwner(permissions.BasePermission):
 class IsCorporatePartnerOrAdmin(permissions.BasePermission):
     """
     Permission for projects: Corporate partners can manage their own, admins can do all.
+    - Read operations (GET, HEAD, OPTIONS): All authenticated users
+    - Write operations (POST, PUT, PATCH, DELETE): Only corporate partners (for their own) and admins
     """
-    def has_object_permission(self, request, view, obj):
-        if request.user.is_staff or request.user.role == 'ADMIN':
+    def has_permission(self, request, view):
+        # Must be authenticated
+        if not request.user or not request.user.is_authenticated:
+            return False
+        
+        # Read operations: all authenticated users can read
+        if request.method in permissions.SAFE_METHODS:
             return True
         
-        # Check if object belongs to corporate partner
-        if hasattr(obj, 'created_by'):
-            return obj.created_by.user == request.user
+        # Write operations: only corporate partners and admins
+        return (
+            request.user.is_staff or 
+            request.user.role == User.ADMIN or 
+            request.user.role == User.CORPORATE_PARTNER
+        )
+    
+    def has_object_permission(self, request, view, obj):
+        # Read operations: all authenticated users can read
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        # Admin can do anything
+        if request.user.is_staff or request.user.role == User.ADMIN:
+            return True
+        
+        # Corporate partners can only manage their own projects
+        if request.user.role == User.CORPORATE_PARTNER:
+            if hasattr(obj, 'created_by'):
+                # created_by is a ForeignKey to CorporatePartnerProfile
+                # Check if the corporate partner profile's user matches the request user
+                if obj.created_by and hasattr(obj.created_by, 'user'):
+                    return obj.created_by.user == request.user
         
         return False
 

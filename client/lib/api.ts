@@ -1,11 +1,63 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+/**
+ * Core API utility: base URL, JWT token handling, and fetch logic
+ */
 
-interface ApiResponse<T> {
+// Import API modules for backward compatibility
+import * as authApi from './auth.api';
+import * as usersApi from './users.api';
+import * as projectsApi from './projects.api';
+import * as mentorsApi from './mentors.api';
+import * as certificatesApi from './certificates.api';
+
+// Base API URL
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+
+// Response type for all API calls
+export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
 
-async function fetchApi<T>(
+/**
+ * Get JWT token from localStorage
+ */
+export function getAccessToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('access_token');
+}
+
+/**
+ * Get refresh token from localStorage
+ */
+export function getRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('refresh_token');
+}
+
+/**
+ * Set JWT tokens in localStorage
+ */
+export function setTokens(access: string, refresh: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('access_token', access);
+  localStorage.setItem('refresh_token', refresh);
+}
+
+/**
+ * Clear all auth tokens and user data from localStorage
+ */
+export function clearAuth(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
+}
+
+/**
+ * Core fetch function with JWT authentication
+ * Handles token injection, error handling, and automatic logout on 401
+ */
+export async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
@@ -13,7 +65,7 @@ async function fetchApi<T>(
     const url = `${API_BASE_URL}${endpoint}`;
     
     // Get token from localStorage
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const token = getAccessToken();
     
     // Prepare headers
     const headers: Record<string, string> = {
@@ -33,14 +85,56 @@ async function fetchApi<T>(
 
     // Handle 401 Unauthorized - token expired or invalid
     if (response.status === 401) {
+      clearAuth();
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
         window.location.href = '/login';
       }
       return { error: 'Unauthorized. Please login again.' };
     }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'An error occurred' }));
+      return { error: errorData.detail || errorData.error || `HTTP ${response.status}` };
+    }
+
+    // Handle 204 No Content responses (common for DELETE requests)
+    if (response.status === 204) {
+      return { data: undefined };
+    }
+
+    // Check if response has content
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+      return { data };
+    }
+
+    // For other content types or empty responses, return undefined data
+    return { data: undefined };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Network error' };
+  }
+}
+
+/**
+ * Fetch without authentication (for public endpoints)
+ */
+export async function fetchApiPublic<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+  try {
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string> || {}),
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'An error occurred' }));
@@ -54,93 +148,44 @@ async function fetchApi<T>(
   }
 }
 
+/**
+ * Backward-compatible API object
+ * @deprecated Use specific API modules instead:
+ * - auth.api.ts for login/register/logout
+ * - users.api.ts for user operations
+ * - projects.api.ts for project operations
+ * - mentors.api.ts for mentorship operations
+ * - certificates.api.ts for certificates/achievements
+ */
 export const api = {
-  // Students
-  getStudent: (id: number) => fetchApi(`/users/students/${id}/`),
-  getStudents: () => fetchApi('/users/students/'),
-  
-  // Parents
-  getParent: (id: number) => fetchApi(`/users/parents/${id}/`),
-  getParents: () => fetchApi('/users/parents/'),
-  updateParent: (id: number, data: any) => fetchApi(`/users/parents/${id}/`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-  
-  // Corporate Partners
-  getCorporatePartner: (id: number) => fetchApi(`/users/corporate-partners/${id}/`),
-  getCorporatePartners: () => fetchApi('/users/corporate-partners/'),
-  updateCorporatePartner: (id: number, data: any) => fetchApi(`/users/corporate-partners/${id}/`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
+  // Authentication
+  login: authApi.login,
+  register: authApi.register,
   
   // Users
-  getUser: (id: number) => fetchApi(`/users/users/${id}/`),
+  getUser: usersApi.getUser,
+  getStudent: usersApi.getStudent,
+  getStudents: usersApi.getStudents,
+  getParent: usersApi.getParent,
+  getParents: usersApi.getParents,
+  updateParent: usersApi.updateParent,
+  getCorporatePartner: usersApi.getCorporatePartner,
+  getCorporatePartners: usersApi.getCorporatePartners,
+  updateCorporatePartner: usersApi.updateCorporatePartner,
   
-  // Projects - CRUD operations
-  getProjects: () => fetchApi('/projects/projects/'),
-  getProject: (id: number) => fetchApi(`/projects/projects/${id}/`),
-  createProject: (data: any) => fetchApi('/projects/projects/', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  }),
-  updateProject: (id: number, data: any) => fetchApi(`/projects/projects/${id}/`, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  }),
-  deleteProject: (id: number) => fetchApi(`/projects/projects/${id}/`, {
-    method: 'DELETE',
-  }),
-  
-  // Project Submissions
-  getSubmissions: () => fetchApi('/projects/student-submissions/'),
-  getSubmission: (id: number) => fetchApi(`/projects/student-submissions/${id}/`),
+  // Projects
+  getProjects: projectsApi.getProjects,
+  getProject: projectsApi.getProject,
+  createProject: projectsApi.createProject,
+  updateProject: projectsApi.updateProject,
+  deleteProject: projectsApi.deleteProject,
+  getSubmissions: projectsApi.getSubmissions,
+  getSubmission: projectsApi.getSubmission,
   
   // Achievements
-  getBadges: () => fetchApi('/achievements/badges/'),
-  getCertificates: () => fetchApi('/achievements/certificates/'),
-  getSkills: () => fetchApi('/achievements/skills/'),
-  
-  // Authentication (no token needed for these)
-  login: async (email: string, password: string) => {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/auth/login/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        return { error: data.error || 'Login failed' };
-      }
-      return { data };
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Network error' };
-    }
-  },
-  register: async (data: any) => {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/auth/register/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      const responseData = await response.json();
-      if (!response.ok) {
-        return { error: responseData.error || 'Registration failed' };
-      }
-      return { data: responseData };
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Network error' };
-    }
-  },
+  getBadges: certificatesApi.getBadges,
+  getCertificates: certificatesApi.getCertificates,
+  getSkills: certificatesApi.getSkills,
 };
 
 export default api;

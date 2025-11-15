@@ -133,54 +133,101 @@ const CorporateDashboard: NextPage = () => {
     setCreatingProject(true);
     setError(null);
     
+    const profileId = parseInt(localStorage.getItem('profileId') || '0');
+    
+    if (!profileId) {
+      setError('Corporate partner profile not found. Please login again.');
+      setCreatingProject(false);
+      return;
+    }
+
+    // Prepare project data - only include dates if they're provided
+    const projectData: any = {
+      title: projectForm.title.trim(),
+      description: projectForm.description.trim(),
+      status: projectForm.status,
+      created_by: profileId,
+      skills_required: projectForm.skills_required,
+    };
+
+    // Only include dates if they're provided
+    if (projectForm.start_date) {
+      projectData.start_date = projectForm.start_date;
+    }
+    if (projectForm.end_date) {
+      projectData.end_date = projectForm.end_date;
+    }
+
+    // Optimistic update: create temporary project and add to UI immediately
+    const tempProject: Project = {
+      id: Date.now(), // Temporary ID
+      title: projectData.title,
+      description: projectData.description,
+      status: projectData.status,
+      created_by: profileId,
+      skills_required: projectData.skills_required || [],
+      start_date: projectData.start_date || null,
+      end_date: projectData.end_date || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const previousProjects = [...projects];
+    setProjects(prevProjects => [...prevProjects, tempProject]);
+
+    // Reset form immediately for better UX
+    setProjectForm({
+      title: '',
+      description: '',
+      status: 'DRAFT',
+      start_date: '',
+      end_date: '',
+      skills_required: [],
+    });
+    setShowCreateForm(false);
+    
     try {
-      const profileId = parseInt(localStorage.getItem('profileId') || '0');
-      
-      if (!profileId) {
-        setError('Corporate partner profile not found. Please login again.');
-        setCreatingProject(false);
-        return;
-      }
-
-      // Prepare project data - only include dates if they're provided
-      const projectData: any = {
-        title: projectForm.title.trim(),
-        description: projectForm.description.trim(),
-        status: projectForm.status,
-        created_by: profileId,
-        skills_required: projectForm.skills_required,
-      };
-
-      // Only include dates if they're provided
-      if (projectForm.start_date) {
-        projectData.start_date = projectForm.start_date;
-      }
-      if (projectForm.end_date) {
-        projectData.end_date = projectForm.end_date;
-      }
-      
       const response = await api.createProject(projectData);
       if (response.error) {
+        // Restore previous state if creation failed
+        setProjects(previousProjects);
+        setShowCreateForm(true);
+        setProjectForm({
+          title: projectData.title,
+          description: projectData.description,
+          status: projectData.status,
+          start_date: projectData.start_date || '',
+          end_date: projectData.end_date || '',
+          skills_required: projectData.skills_required || [],
+        });
         setError(`Error creating project: ${response.error}`);
         setCreatingProject(false);
         return;
       }
       
-      // Success!
-      setSuccessMessage('Project created successfully!');
+      // Success! Replace temp project with real one from API
+      if (response.data) {
+        setProjects(prevProjects => 
+          prevProjects.map(p => p.id === tempProject.id ? response.data! : p)
+        );
+      } else {
+        // If no data returned, refresh from backend
+        await fetchProjects();
+      }
       
-      // Reset form and refresh projects
-      setProjectForm({
-        title: '',
-        description: '',
-        status: 'DRAFT',
-        start_date: '',
-        end_date: '',
-        skills_required: [],
-      });
-      setShowCreateForm(false);
-      await fetchProjects();
+      setSuccessMessage('Project created successfully!');
     } catch (err) {
+      // Restore previous state if creation failed
+      setProjects(previousProjects);
+      setShowCreateForm(true);
+      setProjectForm({
+        title: projectData.title,
+        description: projectData.description,
+        status: projectData.status,
+        start_date: projectData.start_date || '',
+        end_date: projectData.end_date || '',
+        skills_required: projectData.skills_required || [],
+      });
       setError('Failed to create project. Please try again.');
       console.error('Create project error:', err);
     } finally {
@@ -195,43 +242,100 @@ const CorporateDashboard: NextPage = () => {
     setCreatingProject(true);
     setError(null);
 
-    try {
-      const projectData: any = {
-        title: projectForm.title.trim(),
-        description: projectForm.description.trim(),
-        status: projectForm.status,
-        created_by: editingProject.created_by,
-        skills_required: projectForm.skills_required,
-      };
+    const projectData: any = {
+      title: projectForm.title.trim(),
+      description: projectForm.description.trim(),
+      status: projectForm.status,
+      created_by: editingProject.created_by,
+      skills_required: projectForm.skills_required,
+    };
 
-      // Only include dates if they're provided
-      if (projectForm.start_date) {
-        projectData.start_date = projectForm.start_date;
-      }
-      if (projectForm.end_date) {
-        projectData.end_date = projectForm.end_date;
-      }
-      
+    // Only include dates if they're provided
+    if (projectForm.start_date) {
+      projectData.start_date = projectForm.start_date;
+    }
+    if (projectForm.end_date) {
+      projectData.end_date = projectForm.end_date;
+    }
+
+    // Optimistic update: update project in UI immediately
+    const previousProjects = [...projects];
+    const updatedProject: Project = {
+      ...editingProject,
+      ...projectData,
+      updated_at: new Date().toISOString(),
+    };
+
+    setProjects(prevProjects =>
+      prevProjects.map(p => p.id === editingProject.id ? updatedProject : p)
+    );
+
+    // Reset form immediately for better UX
+    setEditingProject(null);
+    setProjectForm({
+      title: '',
+      description: '',
+      status: 'DRAFT',
+      start_date: '',
+      end_date: '',
+      skills_required: [],
+    });
+    setShowCreateForm(false);
+
+    try {
       const response = await api.updateProject(editingProject.id, projectData);
       if (response.error) {
+        // Restore previous state if update failed
+        setProjects(previousProjects);
+        setShowCreateForm(true);
+        setEditingProject(editingProject);
+        const formatDate = (dateString: string | null) => {
+          if (!dateString) return '';
+          const date = new Date(dateString);
+          return date.toISOString().split('T')[0];
+        };
+        setProjectForm({
+          title: editingProject.title,
+          description: editingProject.description,
+          status: editingProject.status,
+          start_date: formatDate(editingProject.start_date),
+          end_date: formatDate(editingProject.end_date),
+          skills_required: editingProject.skills_required || [],
+        });
         setError(`Error updating project: ${response.error}`);
         setCreatingProject(false);
         return;
       }
       
+      // Success! Replace with updated project from API
+      if (response.data) {
+        setProjects(prevProjects =>
+          prevProjects.map(p => p.id === editingProject.id ? response.data! : p)
+        );
+      } else {
+        // If no data returned, refresh from backend
+        await fetchProjects();
+      }
+      
       setSuccessMessage('Project updated successfully!');
-      setEditingProject(null);
-      setProjectForm({
-        title: '',
-        description: '',
-        status: 'DRAFT',
-        start_date: '',
-        end_date: '',
-        skills_required: [],
-      });
-      setShowCreateForm(false);
-      await fetchProjects();
     } catch (err) {
+      // Restore previous state if update failed
+      setProjects(previousProjects);
+      setShowCreateForm(true);
+      setEditingProject(editingProject);
+      const formatDate = (dateString: string | null) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      };
+      setProjectForm({
+        title: editingProject.title,
+        description: editingProject.description,
+        status: editingProject.status,
+        start_date: formatDate(editingProject.start_date),
+        end_date: formatDate(editingProject.end_date),
+        skills_required: editingProject.skills_required || [],
+      });
       setError('Failed to update project. Please try again.');
       console.error('Update project error:', err);
     } finally {
@@ -247,17 +351,30 @@ const CorporateDashboard: NextPage = () => {
     setDeletingProject(id);
     setError(null);
 
+    // Optimistic update: remove project from UI immediately
+    const previousProjects = [...projects];
+    setProjects(prevProjects => prevProjects.filter(p => p.id !== id));
+
     try {
       const response = await api.deleteProject(id);
       if (response.error) {
+        // Restore previous state if deletion failed
+        setProjects(previousProjects);
         setError(`Error deleting project: ${response.error}`);
         setDeletingProject(null);
         return;
       }
       
+      // Success! (204 No Content or successful response)
       setSuccessMessage('Project deleted successfully!');
+      
+      // Refresh projects list to ensure consistency with backend
+      // Use functional update to ensure we're working with latest state
       await fetchProjects();
+      
     } catch (err) {
+      // Restore previous state if deletion failed
+      setProjects(previousProjects);
       setError('Failed to delete project. Please try again.');
       console.error('Delete project error:', err);
     } finally {
