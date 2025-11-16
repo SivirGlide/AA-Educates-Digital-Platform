@@ -1,0 +1,920 @@
+{
+	"info": {
+		"_postman_id": "aa-educates-permissions-tests",
+		"name": "AA Educates - Permission Tests",
+		"description": "Comprehensive test suite for role-based permissions in AA Educates backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login - Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set(\"student_token\", jsonData.access);",
+									"    pm.environment.set(\"student_user_id\", jsonData.user.id);",
+									"    pm.environment.set(\"student_profile_id\", jsonData.user.profile_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"student@test.com\",\n  \"password\": \"testpass123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/auth/login/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "auth", "login", ""]
+						}
+					}
+				},
+				{
+					"name": "Login - Parent",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set(\"parent_token\", jsonData.access);",
+									"    pm.environment.set(\"parent_user_id\", jsonData.user.id);",
+									"    pm.environment.set(\"parent_profile_id\", jsonData.user.profile_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"parent@test.com\",\n  \"password\": \"testpass123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/auth/login/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "auth", "login", ""]
+						}
+					}
+				},
+				{
+					"name": "Login - Corporate Partner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set(\"corporate_token\", jsonData.access);",
+									"    pm.environment.set(\"corporate_user_id\", jsonData.user.id);",
+									"    pm.environment.set(\"corporate_profile_id\", jsonData.user.profile_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"corporate@test.com\",\n  \"password\": \"testpass123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/auth/login/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "auth", "login", ""]
+						}
+					}
+				},
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set(\"admin_token\", jsonData.access);",
+									"    pm.environment.set(\"admin_user_id\", jsonData.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"testpass123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/auth/login/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "auth", "login", ""]
+						}
+					}
+				},
+				{
+					"name": "Login - Invalid Credentials",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"student@test.com\",\n  \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/auth/login/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "auth", "login", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Student Access Tests",
+			"item": [
+				{
+					"name": "Student - Get Own Student Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/students/{{student_profile_id}}/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", "{{student_profile_id}}", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - List Student Profiles (Should Only See Self)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/students/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - Access Parent Profiles (Should Fail - 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/parents/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "parents", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - Access Corporate Profiles (Should Fail - 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/corporate-partners/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "corporate-partners", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - Access Admin Profiles (Should Fail - 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/admins/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "admins", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - Get Own User Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/users/{{student_user_id}}/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "users", "{{student_user_id}}", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - List Users (Should Only See Self)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/users/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "users", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - Get /users/me/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/users/me/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "users", "me", ""]
+						}
+					}
+				},
+				{
+					"name": "Student - Update Own Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bio\": \"Updated bio from student\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/students/{{student_profile_id}}/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", "{{student_profile_id}}", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Corporate Partner Access Tests",
+			"item": [
+				{
+					"name": "Corporate - Get Own Corporate Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{corporate_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/corporate-partners/{{corporate_profile_id}}/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "corporate-partners", "{{corporate_profile_id}}", ""]
+						}
+					}
+				},
+				{
+					"name": "Corporate - List Corporate Profiles (Should Only See Self)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{corporate_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/corporate-partners/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "corporate-partners", ""]
+						}
+					}
+				},
+				{
+					"name": "Corporate - Access Student Profiles (Should Get Empty)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{corporate_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/students/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", ""]
+						}
+					}
+				},
+				{
+					"name": "Corporate - Access Parent Profiles (Should Fail - 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{corporate_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/parents/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "parents", ""]
+						}
+					}
+				},
+				{
+					"name": "Corporate - Access Admin Profiles (Should Fail - 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{corporate_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/admins/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "admins", ""]
+						}
+					}
+				},
+				{
+					"name": "Corporate - Update Own Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{corporate_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"company_name\": \"Updated Company Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/corporate-partners/{{corporate_profile_id}}/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "corporate-partners", "{{corporate_profile_id}}", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Parent Access Tests",
+			"item": [
+				{
+					"name": "Parent - Get Own Parent Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{parent_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/parents/{{parent_profile_id}}/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "parents", "{{parent_profile_id}}", ""]
+						}
+					}
+				},
+				{
+					"name": "Parent - List Parent Profiles (Should Only See Self)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{parent_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/parents/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "parents", ""]
+						}
+					}
+				},
+				{
+					"name": "Parent - Access Student Profiles (Should See Linked Only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{parent_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/students/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", ""]
+						}
+					}
+				},
+				{
+					"name": "Parent - Access Corporate Profiles (Should Fail - 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{parent_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/corporate-partners/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "corporate-partners", ""]
+						}
+					}
+				},
+				{
+					"name": "Parent - Access Admin Profiles (Should Fail - 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{parent_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/admins/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "admins", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Admin Access Tests",
+			"item": [
+				{
+					"name": "Admin - Get All Student Profiles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/students/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", ""]
+						}
+					}
+				},
+				{
+					"name": "Admin - Get All Parent Profiles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/parents/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "parents", ""]
+						}
+					}
+				},
+				{
+					"name": "Admin - Get All Corporate Profiles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/corporate-partners/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "corporate-partners", ""]
+						}
+					}
+				},
+				{
+					"name": "Admin - Get All Admin Profiles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/admins/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "admins", ""]
+						}
+					}
+				},
+				{
+					"name": "Admin - Get All Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/users/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "users", ""]
+						}
+					}
+				},
+				{
+					"name": "Admin - Update Any Student Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"bio\": \"Updated by admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/students/{{student_profile_id}}/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", "{{student_profile_id}}", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Unauthenticated Access Tests",
+			"item": [
+				{
+					"name": "No Auth - Access Students (Should Fail - 401)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/students/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", ""]
+						}
+					}
+				},
+				{
+					"name": "No Auth - Access Parents (Should Fail - 401)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/parents/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "parents", ""]
+						}
+					}
+				},
+				{
+					"name": "No Auth - Access Corporate (Should Fail - 401)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/corporate-partners/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "corporate-partners", ""]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Token Management",
+			"item": [
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/auth/refresh/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "auth", "refresh", ""]
+						}
+					}
+				},
+				{
+					"name": "Verify Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{student_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/auth/verify/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "auth", "verify", ""]
+						}
+					}
+				},
+				{
+					"name": "Invalid Token Test",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "invalid_token_here",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/students/",
+							"host": ["{{base_url}}"],
+							"path": ["users", "students", ""]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api",
+			"type": "string"
+		}
+	]
+}
+

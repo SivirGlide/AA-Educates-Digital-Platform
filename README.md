@@ -4,12 +4,12 @@
 - Python 3.11+ recommended (3.12+ works). Ensure `python3` and `pip` are available.
 - Git
 
-## 1) Clone and create a virtual environment
+## 1) Clone and create a virtual environment (Backend only)
 ```bash
 git clone <your-repo-url>
 cd "AA-Educates-Digital-Platform"
 
-# create venv (macOS/Linux)
+# create venv for Python/Django backend (macOS/Linux)
 python3 -m venv .venv
 source .venv/bin/activate
 
@@ -17,6 +17,8 @@ source .venv/bin/activate
 # python -m venv .venv
 # .venv\\Scripts\\Activate.ps1
 ```
+
+**Note:** The virtual environment is for the Python/Django backend only. For Next.js client setup, see the [client/README.md](client/README.md) file.
 
 ## 2) Install backend dependencies
 ```bash
@@ -81,7 +83,7 @@ AA-Educates-Digital-Platform/
     analytics/              # ProgressTracker, EngagementLog, ImpactReport
     payments/               # PaymentTransaction, CRMContactLog
     manage.py
-  client/                   # Frontend placeholder (currently empty)
+  client/                   # Next.js frontend (see client/README.md)
 ```
 
 ## 8) URLs overview (prefixes with `/api/` prefix)
@@ -116,7 +118,7 @@ python3 manage.py migrate
 ## 11) base-schema-0.3 changes
 - Renamed Django project folder to `backend` (updated settings, urls, wsgi/asgi, manage.py).
 - Using SQLite database (default Django database for development).
-- Removed client folder contents (Next.js app removed).
+- Next.js frontend in `client/` folder (see client/README.md for setup instructions).
 - Removed django-cors-headers and djangorestframework-simplejwt (no CORS or JWT authentication on this branch).
 - Introduced modular apps:
   - `users`: custom `User` with role enum and profile models.
