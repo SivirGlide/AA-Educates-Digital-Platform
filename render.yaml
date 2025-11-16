@@ -9,7 +9,7 @@ services:
     name: aa-educates-backend
     runtime: python
     plan: free
-    buildCommand: "./backend/build.sh"
+    buildCommand: "cd backend && bash build.sh"
     startCommand: "cd backend && gunicorn backend.wsgi:application"
     envVars:
       - key: SECRET_KEY
