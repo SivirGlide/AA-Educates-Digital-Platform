@@ -180,6 +180,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Add production frontend URL from environment variable
+# After deploying to Vercel, set FRONTEND_URL in Render to your Vercel deployment URL
+# Example: https://your-app.vercel.app
 FRONTEND_URL = os.environ.get('FRONTEND_URL')
 if FRONTEND_URL:
     CORS_ALLOWED_ORIGINS.append(FRONTEND_URL)
