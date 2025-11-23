@@ -86,7 +86,7 @@ const ParentProgressPage: NextPage = () => {
           return;
         }
 
-        const childrenIds: number[] = parentResponse.data.students || [];
+        const childrenIds: number[] = (parentResponse.data as any).students || [];
         if (childrenIds.length === 0) {
           setEntries([]);
           setLoading(false);

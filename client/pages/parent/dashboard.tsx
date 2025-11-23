@@ -22,30 +22,22 @@ interface User {
 interface StudentProfile {
   id: number;
   user: number;
-  school: number | null;
-  bio: string;
-  cv: string;
-  portfolio_link: string;
-  badges: number[];
-  certificates: number[];
-  skills: number[];
-}
-
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  created_at: string;
+  school?: string;
+  bio?: string;
+  cv?: string;
+  portfolio_link?: string;
+  badges?: number[];
+  certificates?: number[];
+  skills?: number[];
 }
 
 interface StudentProjectSubmission {
   id: number;
   student: number;
   project: number;
-  submission_link: string;
-  feedback: string;
-  grade: number | null;
+  submission_link?: string;
+  feedback?: string;
+  grade?: number | null;
   status: string;
   submitted_at: string;
 }
@@ -54,7 +46,7 @@ const ParentDashboard: NextPage = () => {
   const [parent, setParent] = useState<ParentProfile | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [children, setChildren] = useState<StudentProfile[]>([]);
-  const [childrenData, setChildrenData] = useState<Array<{student: StudentProfile, user: User}>>([]);
+  const [childrenData, setChildrenData] = useState<Array<{student: StudentProfile, user: User | null}>>([]);
   const [submissions, setSubmissions] = useState<StudentProjectSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,32 +65,38 @@ const ParentDashboard: NextPage = () => {
 
   const fetchParentData = async () => {
     try {
-      // Get profile ID from localStorage (set during login)
-      const profileId = localStorage.getItem('profileId');
+      // Get user ID from localStorage (set during login)
       const userId = localStorage.getItem('userId');
-      
-      if (!profileId || !userId) {
+
+      if (!userId) {
         setError('Please login to access your dashboard');
         setLoading(false);
         return;
       }
 
-      // Fetch parent profile using authenticated user's profile ID
-      const parentResponse = await api.getParent(parseInt(profileId));
-      if (parentResponse.error) {
-        setError(parentResponse.error);
+      // Fetch parent profile using list endpoint (returns only user's own profile)
+      const parentsResponse = await api.getParents();
+      if (parentsResponse.error) {
+        setError(parentsResponse.error);
         setLoading(false);
         return;
       }
 
-      if (parentResponse.data) {
-        setParent(parentResponse.data as ParentProfile);
-        
+      // Get the first (and only) profile from the list
+      const parentProfiles = Array.isArray(parentsResponse.data)
+        ? parentsResponse.data
+        : (parentsResponse.data as any)?.results || [];
+
+      if (parentProfiles.length > 0) {
+        setParent(parentProfiles[0] as ParentProfile);
+
         // Fetch user data
         const userResponse = await api.getUser(parseInt(userId));
         if (userResponse.data) {
           setUser(userResponse.data as User);
         }
+      } else {
+        setError('No parent profile found. Please contact support.');
       }
     } catch (err) {
       setError('Failed to load parent data');
@@ -125,12 +123,12 @@ const ParentDashboard: NextPage = () => {
       });
 
       const childrenDataArray = await Promise.all(childrenPromises);
-      const validChildren = childrenDataArray.filter(c => c !== null) as Array<{student: StudentProfile, user: User}>;
+      const validChildren = childrenDataArray.filter((c): c is NonNullable<typeof c> => c !== null);
       setChildrenData(validChildren);
       setChildren(validChildren.map(c => c.student));
-      
+
       // Set first child as selected by default
-      if (validChildren.length > 0) {
+      if (validChildren.length > 0 && validChildren[0]) {
         setSelectedChild(validChildren[0].student.id);
       }
     } catch (err) {
@@ -144,9 +142,9 @@ const ParentDashboard: NextPage = () => {
       if (response.data && Array.isArray(response.data)) {
         // Filter submissions from parent's children
         const childrenIds = parent?.students || [];
-        const childrenSubmissions = response.data.filter((sub: StudentProjectSubmission) => 
+        const childrenSubmissions = response.data.filter((sub: any) =>
           childrenIds.includes(sub.student)
-        );
+        ) as StudentProjectSubmission[];
         setSubmissions(childrenSubmissions);
       }
     } catch (err) {
@@ -167,18 +165,64 @@ const ParentDashboard: NextPage = () => {
       <main className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
         {/* Navigation */}
         <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-              AA Educates
-            </Link>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700 font-medium">Parent Portal</span>
-              <Link 
-                href="/login" 
-                className="px-4 py-2 text-green-600 hover:text-green-700 font-medium hover:bg-green-50 rounded-lg transition-colors"
-              >
-                Logout
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                AA Educates
               </Link>
+
+              {/* Navigation Links */}
+              <div className="flex items-center gap-6">
+                <Link
+                  href="/parent/dashboard"
+                  className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/parent/students"
+                  className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Students
+                </Link>
+                <Link
+                  href="/parent/progress"
+                  className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Progress
+                </Link>
+                <Link
+                  href="/parent/certificates"
+                  className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Certificates
+                </Link>
+                <Link
+                  href="/parent/workbooks"
+                  className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Workbooks
+                </Link>
+                <Link
+                  href="/parent/account"
+                  className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Account
+                </Link>
+                <Link
+                  href="/parent/settings"
+                  className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors"
+                >
+                  Settings
+                </Link>
+
+                <Link
+                  href="/login"
+                  className="ml-4 px-4 py-2 text-green-600 hover:text-green-700 font-medium hover:bg-green-50 rounded-lg transition-colors"
+                >
+                  Logout
+                </Link>
+              </div>
             </div>
           </div>
         </nav>

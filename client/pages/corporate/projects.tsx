@@ -3,18 +3,7 @@ import Link from 'next/link';
 import type { NextPage } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
-
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  start_date: string | null;
-  end_date: string | null;
-  created_at: string;
-  updated_at: string;
-  created_by: number;
-}
+import { Project } from '../../lib/projects.api';
 
 const navLinks = [
   { href: '/corporate/dashboard', label: 'Dashboard' },
