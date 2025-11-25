@@ -129,6 +129,24 @@ def register(request):
         role=role,
     )
 
+    # Automatically create profile based on role
+    profile_id = None
+    if user.role == User.STUDENT:
+        profile = StudentProfile.objects.create(user=user)
+        profile_id = profile.id
+    elif user.role == User.PARENT:
+        profile = ParentProfile.objects.create(user=user)
+        profile_id = profile.id
+    elif user.role == User.CORPORATE_PARTNER:
+        profile = CorporatePartnerProfile.objects.create(
+            user=user,
+            company_name=request.data.get('company_name', '')
+        )
+        profile_id = profile.id
+    elif user.role == User.ADMIN:
+        profile = AdminProfile.objects.create(user=user)
+        profile_id = profile.id
+
     # Generate tokens
     refresh = RefreshToken.for_user(user)
     access_token = refresh.access_token
@@ -143,7 +161,7 @@ def register(request):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'role': user.role,
-            'profile_id': None,  # Profile needs to be created separately
+            'profile_id': profile_id,
         }
     }, status=status.HTTP_201_CREATED)
 

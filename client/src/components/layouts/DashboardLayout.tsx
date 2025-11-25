@@ -114,6 +114,14 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, back
   const navLinks = getNavLinks(role);
   const currentPath = router.pathname;
 
+  // Debug
+  console.log('Navigation Debug:', {
+    mounted,
+    role,
+    navLinks,
+    navLinksLength: navLinks.length
+  });
+
   const handleLogout = () => {
     logout();
     router.push('/login');
@@ -219,7 +227,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, back
 
               {/* Navigation Links */}
               {mounted && (
-                <div className="hidden md:flex items-center gap-1">
+                <div className="flex items-center gap-1">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}

@@ -95,15 +95,15 @@ const CorporateNewProjectPage: NextPage = () => {
         setSubmitting(false);
         return;
       }
-      const payload: Record<string, unknown> = {
+      const payload = {
         title: form.title.trim(),
         description: form.description.trim(),
         created_by: profileId,
         status: form.status,
         skills_required: form.skills_required,
+        ...(form.start_date && { start_date: form.start_date }),
+        ...(form.end_date && { end_date: form.end_date }),
       };
-      if (form.start_date) payload.start_date = form.start_date;
-      if (form.end_date) payload.end_date = form.end_date;
 
       const response = await api.createProject(payload);
       if (response.error) {

@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
+import { Project } from '../../lib/projects.api';
 
 interface CorporatePartnerProfile {
   id: number;
@@ -21,20 +22,6 @@ interface User {
   first_name: string;
   last_name: string;
   role: string;
-}
-
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  created_by: number;
-  skills_required: number[];
-  start_date: string | null;
-  end_date: string | null;
-  status: string;
-  approved_by: number | null;
-  created_at: string;
-  updated_at: string;
 }
 
 const CorporateDashboard: NextPage = () => {
@@ -74,27 +61,31 @@ const CorporateDashboard: NextPage = () => {
 
   const fetchCorporateData = async () => {
     try {
-      // Get profile ID from localStorage (set during login)
-      const profileId = localStorage.getItem('profileId');
+      // Get user ID from localStorage (set during login)
       const userId = localStorage.getItem('userId');
-      
-      if (!profileId || !userId) {
+
+      if (!userId) {
         setError('Please login to access your dashboard');
         setLoading(false);
         return;
       }
 
-      // Fetch corporate partner using authenticated user's profile ID
-      const corporateResponse = await api.getCorporatePartner(parseInt(profileId));
+      // Fetch corporate partner profile using list endpoint (returns only user's own profile)
+      const corporateResponse = await api.getCorporatePartners();
       if (corporateResponse.error) {
         setError(corporateResponse.error);
         setLoading(false);
         return;
       }
 
-      if (corporateResponse.data && typeof corporateResponse.data === 'object' && 'id' in corporateResponse.data) {
-        setCorporate(corporateResponse.data as CorporatePartnerProfile);
-        
+      // Get the first (and only) profile from the list
+      const corporateProfiles = Array.isArray(corporateResponse.data)
+        ? corporateResponse.data
+        : (corporateResponse.data as any)?.results || [];
+
+      if (corporateProfiles.length > 0) {
+        setCorporate(corporateProfiles[0] as CorporatePartnerProfile);
+
         // Fetch user data
         const userResponse = await api.getUser(parseInt(userId));
         if (userResponse.data && typeof userResponse.data === 'object' && 'id' in userResponse.data) {
@@ -103,7 +94,7 @@ const CorporateDashboard: NextPage = () => {
           console.error('Failed to fetch user data:', userResponse.error);
         }
       } else {
-        console.error('Failed to fetch corporate data:', corporateResponse.error);
+        setError('No corporate partner profile found. Please contact support.');
       }
     } catch (err) {
       setError('Failed to load corporate partner data');
@@ -166,8 +157,8 @@ const CorporateDashboard: NextPage = () => {
       status: projectData.status,
       created_by: profileId,
       skills_required: projectData.skills_required || [],
-      start_date: projectData.start_date || null,
-      end_date: projectData.end_date || null,
+      start_date: projectData.start_date,
+      end_date: projectData.end_date,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -289,7 +280,7 @@ const CorporateDashboard: NextPage = () => {
         setProjects(previousProjects);
         setShowCreateForm(true);
         setEditingProject(editingProject);
-        const formatDate = (dateString: string | null) => {
+        const formatDate = (dateString?: string) => {
           if (!dateString) return '';
           const date = new Date(dateString);
           return date.toISOString().split('T')[0];
@@ -323,7 +314,7 @@ const CorporateDashboard: NextPage = () => {
       setProjects(previousProjects);
       setShowCreateForm(true);
       setEditingProject(editingProject);
-      const formatDate = (dateString: string | null) => {
+      const formatDate = (dateString?: string) => {
         if (!dateString) return '';
         const date = new Date(dateString);
         return date.toISOString().split('T')[0];
@@ -386,7 +377,7 @@ const CorporateDashboard: NextPage = () => {
     setEditingProject(project);
     setError(null);
     // Format dates for date input (YYYY-MM-DD)
-    const formatDate = (dateString: string | null) => {
+    const formatDate = (dateString?: string) => {
       if (!dateString) return '';
       const date = new Date(dateString);
       return date.toISOString().split('T')[0];
@@ -427,18 +418,64 @@ const CorporateDashboard: NextPage = () => {
       <main className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50">
         {/* Navigation */}
         <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              AA Educates
-            </Link>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700 font-medium">Corporate Portal</span>
-              <Link 
-                href="/login" 
-                className="px-4 py-2 text-purple-600 hover:text-purple-700 font-medium hover:bg-purple-50 rounded-lg transition-colors"
-              >
-                Logout
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                AA Educates
               </Link>
+
+              {/* Navigation Links */}
+              <div className="flex items-center gap-6">
+                <Link
+                  href="/corporate/dashboard"
+                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/corporate/projects"
+                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Projects
+                </Link>
+                <Link
+                  href="/corporate/talent"
+                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Talent
+                </Link>
+                <Link
+                  href="/corporate/volunteers"
+                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Volunteers
+                </Link>
+                <Link
+                  href="/corporate/impact"
+                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Impact
+                </Link>
+                <Link
+                  href="/corporate/profile"
+                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Profile
+                </Link>
+                <Link
+                  href="/corporate/settings"
+                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Settings
+                </Link>
+
+                <Link
+                  href="/login"
+                  className="ml-4 px-4 py-2 text-purple-600 hover:text-purple-700 font-medium hover:bg-purple-50 rounded-lg transition-colors"
+                >
+                  Logout
+                </Link>
+              </div>
             </div>
           </div>
         </nav>
