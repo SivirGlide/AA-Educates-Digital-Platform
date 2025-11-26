@@ -65,13 +65,43 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         return;
       }
 
-      setSuccess(true);
-      setLoading(false);
+      // Validate response structure
+      const { access, refresh, user } = response.data;
       
+      if (!access || !refresh || !user) {
+        setError('Invalid response from server. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Store tokens and user data (same as login flow)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', access);
+        localStorage.setItem('refresh_token', refresh);
+        localStorage.setItem('userId', String(user.id ?? ''));
+        localStorage.setItem('userRole', user.role ?? '');
+        if (user.profile_id) {
+          localStorage.setItem('profileId', String(user.profile_id));
+        }
+      }
+
+      setLoading(false);
+
+      // Redirect based on user role (same as login flow)
+      const role = (user.role ?? '').toLowerCase();
+      const destination =
+        role === 'corporate_partner'
+          ? '/corporate/dashboard'
+          : role === 'parent'
+          ? '/parent/dashboard'
+          : role === 'admin'
+          ? '/admin/dashboard'
+          : '/student/dashboard';
+
       if (onSuccess) {
         onSuccess();
       } else {
-        setTimeout(() => router.push('/login'), 1500);
+        router.push(destination);
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
@@ -85,7 +115,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess }) => {
         <CardHeader>
           <CardTitle className="text-2xl text-center">Welcome aboard!</CardTitle>
           <CardDescription className="text-center">
-            Your account has been created successfully. Redirecting you to the login page…
+            Your account has been created successfully. Redirecting you to your dashboard…
           </CardDescription>
         </CardHeader>
       </Card>

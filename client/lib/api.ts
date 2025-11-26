@@ -51,6 +51,9 @@ export function clearAuth(): void {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('user');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('profileId');
 }
 
 /**

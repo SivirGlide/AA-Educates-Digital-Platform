@@ -9,13 +9,15 @@ const LogoutPage: NextPage = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Clear all auth-related localStorage items
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
     localStorage.removeItem('profileId');
 
-    const timeout = setTimeout(() => router.replace('/'), 1500);
+    const timeout = setTimeout(() => router.replace('/login'), 1500);
 
     return () => clearTimeout(timeout);
   }, [router]);
