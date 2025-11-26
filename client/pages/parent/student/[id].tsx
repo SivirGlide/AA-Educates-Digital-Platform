@@ -4,6 +4,8 @@ import { useRouter } from 'next/router';
 import type { NextPage } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../../lib/api';
+import type { Certificate, Badge } from '../../../lib/certificates.api';
+import type { ProjectSubmission } from '../../../lib/projects.api';
 
 interface StudentProfile {
   id: number;
@@ -13,29 +15,6 @@ interface StudentProfile {
   badges: number[];
   certificates: number[];
   skills: number[];
-}
-
-interface Badge {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface Certificate {
-  id: number;
-  name: string;
-  description: string;
-  issued_on: string;
-}
-
-interface Submission {
-  id: number;
-  project: number;
-  submission_link: string;
-  feedback: string;
-  grade: number | null;
-  status: string;
-  submitted_at: string;
 }
 
 const navLinks = [
@@ -98,7 +77,7 @@ const ParentStudentDetailPage: NextPage = () => {
   const [email, setEmail] = useState('');
   const [badges, setBadges] = useState<Badge[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [submissions, setSubmissions] = useState<ProjectSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,7 +115,7 @@ const ParentStudentDetailPage: NextPage = () => {
         const submissionsResponse = await api.getSubmissions();
         if (Array.isArray(submissionsResponse.data)) {
           setSubmissions(
-            submissionsResponse.data.filter((submission: Submission) => submission.student === profile.id)
+            submissionsResponse.data.filter((submission: ProjectSubmission) => submission.student === profile.id)
           );
         }
       } catch (err) {

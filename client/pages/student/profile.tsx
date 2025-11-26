@@ -4,30 +4,10 @@ import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
-
-interface StudentProfile {
-  id: number;
-  user: number;
-  school: number | null;
-  bio: string;
-  cv: string;
-  portfolio_link: string;
-  badges: number[];
-  certificates: number[];
-  skills: number[];
-}
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-}
+import type { StudentProfile, User } from '../../lib/users.api';
 
 const StudentProfilePage: NextPage = () => {
-  const [student, setStudent] = useState<StudentProfile | null>(null);
+  const [student, setStudent] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
