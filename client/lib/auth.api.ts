@@ -72,42 +72,22 @@ export async function register(
   data: RegisterRequest
 ): Promise<ApiResponse<AuthResponse>> {
   try {
-    console.log('Registration request data:', data);
     const response = await fetchApiPublic<AuthResponse>('/users/auth/register/', {
       method: 'POST',
       body: JSON.stringify(data),
     });
 
-    console.log('Registration response:', response);
-
-    // Check if response has error
-    if (response.error) {
-      console.error('Registration error:', response.error);
-      return response;
-    }
-
-    // Check if response has required data
-    if (!response.data) {
-      console.error('Registration succeeded but no data returned');
-      return { error: 'Registration succeeded but no data returned' };
-    }
-
-    // Validate response structure
-    if (!response.data.access || !response.data.refresh) {
-      console.error('Registration response missing tokens:', response.data);
-      return { error: 'Registration succeeded but missing authentication tokens' };
-    }
-
     // Store tokens on successful registration
-    setTokens(response.data.access, response.data.refresh);
-    // Also store user info in localStorage
-    if (typeof window !== 'undefined' && response.data.user) {
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data) {
+      setTokens(response.data.access, response.data.refresh);
+      // Also store user info in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
     }
 
     return response;
   } catch (error) {
-    console.error('Registration exception:', error);
     return { error: error instanceof Error ? error.message : 'Registration failed' };
   }
 }
