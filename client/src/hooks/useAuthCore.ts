@@ -233,7 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
 
-      const response = await api.register(data);
+      const response = await api.register(data as any);
 
       if (response.error || !response.data) {
         setError(response.error ?? 'Registration failed.');
