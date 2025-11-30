@@ -71,7 +71,7 @@ const HomePage: NextPage = () => {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-base px-8">
+                <Button asChild variant="outline" size="lg" className="text-base px-8 bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-400 hover:border-yellow-400">
                   <Link href="/about">Learn More</Link>
                 </Button>
               </div>
@@ -174,7 +174,7 @@ const HomePage: NextPage = () => {
               <Button asChild size="lg" variant="default" className="text-base px-8">
                 <Link href="/register">Start Your Journey</Link>
               </Button>
-              <Button asChild size="lg" variant="secondary" className="text-base px-8">
+              <Button asChild size="lg" className="text-base px-8 bg-yellow-500 text-white hover:bg-yellow-400 hover:text-white">
                 <Link href="/login">Sign In</Link>
               </Button>
             </div>

@@ -158,4 +158,3 @@ All dashboards now use authenticated user data:
 - `client/pages/student/dashboard.tsx` - Dynamic user data
 - `client/pages/corporate/dashboard.tsx` - Dynamic user data
 - `client/pages/parent/dashboard.tsx` - Dynamic user data
-

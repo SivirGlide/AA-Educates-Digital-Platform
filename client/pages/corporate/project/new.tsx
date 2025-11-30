@@ -153,7 +153,7 @@ const CorporateNewProjectPage: NextPage = () => {
                     value={form.title}
                     onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   />
                 </div>
                 <div>
@@ -163,7 +163,7 @@ const CorporateNewProjectPage: NextPage = () => {
                     onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
                     rows={6}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   />
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
@@ -173,7 +173,7 @@ const CorporateNewProjectPage: NextPage = () => {
                       type="date"
                       value={form.start_date}
                       onChange={(event) => setForm((prev) => ({ ...prev, start_date: event.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                     />
                   </div>
                   <div>
@@ -182,7 +182,7 @@ const CorporateNewProjectPage: NextPage = () => {
                       type="date"
                       value={form.end_date}
                       onChange={(event) => setForm((prev) => ({ ...prev, end_date: event.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                     />
                   </div>
                 </div>
@@ -191,7 +191,7 @@ const CorporateNewProjectPage: NextPage = () => {
                   <select
                     value={form.status}
                     onChange={(event) => setForm((prev) => ({ ...prev, status: event.target.value as ProjectForm['status'] }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   >
                     <option value="DRAFT">Draft</option>
                     <option value="OPEN">Open</option>
