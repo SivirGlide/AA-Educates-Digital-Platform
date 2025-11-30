@@ -23,7 +23,7 @@ export const Navbar: React.FC = () => {
 
           {/* Right Side - Auth Buttons */}
           <div className="flex items-center gap-3">
-            <Button asChild variant="ghost">
+            <Button asChild className="bg-yellow-500 text-white hover:bg-yellow-400 hover:text-white">
               <Link href="/login">Sign in</Link>
             </Button>
             <Button asChild>
