@@ -4,6 +4,14 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { Project } from '../../lib/projects.api';
+import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { Textarea } from '@/src/components/ui/textarea';
+import { X, Plus, Building2, FileText, Users, DollarSign, ArrowRight } from 'lucide-react';
 
 interface CorporatePartnerProfile {
   id: number;
@@ -408,6 +416,19 @@ const CorporateDashboard: NextPage = () => {
     });
   };
 
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'OPEN':
+        return 'default';
+      case 'CLOSED':
+        return 'secondary';
+      case 'DRAFT':
+        return 'outline';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <>
       <Head>
@@ -415,471 +436,384 @@ const CorporateDashboard: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50">
-        {/* Navigation */}
-        <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex justify-between items-center">
-              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                AA Educates
-              </Link>
-
-              {/* Navigation Links */}
-              <div className="flex items-center gap-6">
-                <Link
-                  href="/corporate/dashboard"
-                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/corporate/projects"
-                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                >
-                  Projects
-                </Link>
-                <Link
-                  href="/corporate/talent"
-                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                >
-                  Talent
-                </Link>
-                <Link
-                  href="/corporate/volunteers"
-                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                >
-                  Volunteers
-                </Link>
-                <Link
-                  href="/corporate/impact"
-                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                >
-                  Impact
-                </Link>
-                <Link
-                  href="/corporate/profile"
-                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                >
-                  Profile
-                </Link>
-                <Link
-                  href="/corporate/settings"
-                  className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
-                >
-                  Settings
-                </Link>
-
-                <Link
-                  href="/login"
-                  className="ml-4 px-4 py-2 text-purple-600 hover:text-purple-700 font-medium hover:bg-purple-50 rounded-lg transition-colors"
-                >
-                  Logout
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-8">
           {/* Success Message */}
           {successMessage && (
-            <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-green-800 font-medium">{successMessage}</p>
-              </div>
-              <button
-                onClick={() => setSuccessMessage(null)}
-                className="text-green-600 hover:text-green-800"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            <Card className="border-secondary/50 bg-secondary/10">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <p className="text-secondary font-medium">{successMessage}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSuccessMessage(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
           )}
 
           {/* Error Message - Only show if not loading and it's not the initial load error */}
           {error && !loading && corporate && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-red-800 font-medium">{error}</p>
-              </div>
-              <button
-                onClick={() => setError(null)}
-                className="text-red-600 hover:text-red-800"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+            <Card className="border-destructive">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <p className="text-destructive font-medium">{error}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setError(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : error && !corporate ? (
-            <div className="max-w-2xl mx-auto mt-12">
-              <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-                <h3 className="text-xl font-semibold text-red-800 mb-2">Error Loading Data</h3>
-                <p className="text-red-600">{error}</p>
-              </div>
-            </div>
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="text-destructive">Error Loading Data</CardTitle>
+                <CardDescription className="text-destructive">{error}</CardDescription>
+              </CardHeader>
+            </Card>
           ) : corporate && user ? (
             <>
               {/* Corporate Profile Header */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-purple-100">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                  <div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">
-                      {corporate.company_name}
-                    </h1>
-                    <p className="text-xl text-gray-600 mb-2">
-                      {user.email}
-                    </p>
-                    {corporate.industry && (
-                      <p className="text-lg text-purple-600 font-medium">{corporate.industry}</p>
-                    )}
-                    {corporate.website && (
-                      <a 
-                        href={corporate.website} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-700 mt-2 inline-block"
-                      >
-                        Visit Website →
-                      </a>
-                    )}
-                  </div>
-                  <div className="mt-4 md:mt-0">
-                    <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl font-semibold">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
+              <Card className="border-primary/20">
+                <CardHeader>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div>
+                      <CardTitle className="text-4xl md:text-5xl mb-2">
+                        {corporate.company_name}
+                      </CardTitle>
+                      <CardDescription className="text-xl">{user.email}</CardDescription>
+                      {corporate.industry && (
+                        <Badge variant="secondary" className="mt-2">{corporate.industry}</Badge>
+                      )}
+                      {corporate.website && (
+                        <Button asChild variant="link" className="mt-2">
+                          <a href={corporate.website} target="_blank" rel="noopener noreferrer">
+                            Visit Website
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                    <Badge variant="default" className="text-base px-4 py-2">
+                      <Building2 className="mr-2 h-5 w-5" />
                       Corporate ID: {corporate.id}
-                    </div>
+                    </Badge>
                   </div>
-                </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                    <Card className="bg-primary/10 border-primary/20">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-primary mb-1">Active Projects</p>
+                            <p className="text-3xl font-bold text-primary">{projects.filter(p => p.status === 'OPEN').length}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-primary-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-purple-700 mb-1">Active Projects</p>
-                        <p className="text-3xl font-bold text-purple-900">{projects.filter(p => p.status === 'OPEN').length}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
+                    <Card className="bg-secondary/10 border-secondary/20">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-secondary mb-1">Total Projects</p>
+                            <p className="text-3xl font-bold text-secondary">{projects.length}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-secondary-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-6 border border-indigo-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-indigo-700 mb-1">Total Projects</p>
-                        <p className="text-3xl font-bold text-indigo-900">{projects.length}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                      </div>
-                    </div>
+                    <Card className="bg-accent/10 border-accent/20">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-accent mb-1">Closed Projects</p>
+                            <p className="text-3xl font-bold text-accent">{projects.filter(p => p.status === 'CLOSED').length}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
+                            <FileText className="h-6 w-6 text-accent-foreground" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-
-                  <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-pink-700 mb-1">Closed Projects</p>
-                        <p className="text-3xl font-bold text-pink-900">{projects.filter(p => p.status === 'CLOSED').length}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* CRUD Section - Projects */}
-              <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-purple-100">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-3xl font-bold text-gray-900">My Projects</h2>
-                  <button
-                    onClick={() => {
-                      setShowCreateForm(true);
-                      setEditingProject(null);
-                      setProjectForm({
-                        title: '',
-                        description: '',
-                        status: 'DRAFT',
-                        start_date: '',
-                        end_date: '',
-                        skills_required: [],
-                      });
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center"
-                  >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Create Project
-                  </button>
-                </div>
-
-                {/* Create/Edit Form */}
-                {showCreateForm && (
-                  <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 mb-6 border border-purple-200">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                      {editingProject ? 'Edit Project' : 'Create New Project'}
-                    </h3>
-                    <form onSubmit={editingProject ? handleUpdateProject : handleCreateProject} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                        <input
-                          type="text"
-                          value={projectForm.title}
-                          onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea
-                          value={projectForm.description}
-                          onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          rows={4}
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                          <select
-                            value={projectForm.status}
-                            onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          >
-                            <option value="DRAFT">Draft</option>
-                            <option value="OPEN">Open</option>
-                            <option value="CLOSED">Closed</option>
-                            <option value="ARCHIVED">Archived</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                          <input
-                            type="date"
-                            value={projectForm.start_date}
-                            onChange={(e) => setProjectForm({ ...projectForm, start_date: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                          <input
-                            type="date"
-                            value={projectForm.end_date}
-                            onChange={(e) => setProjectForm({ ...projectForm, end_date: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex space-x-4">
-                        <button
-                          type="submit"
-                          disabled={creatingProject}
-                          className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                        >
-                          {creatingProject ? (
-                            <>
-                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                              {editingProject ? 'Updating...' : 'Creating...'}
-                            </>
-                          ) : (
-                            editingProject ? 'Update Project' : 'Create Project'
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelForm}
-                          disabled={creatingProject}
-                          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
+              <Card className="border-primary/20">
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-3xl">My Projects</CardTitle>
+                    <Button
+                      onClick={() => {
+                        setShowCreateForm(true);
+                        setEditingProject(null);
+                        setProjectForm({
+                          title: '',
+                          description: '',
+                          status: 'DRAFT',
+                          start_date: '',
+                          end_date: '',
+                          skills_required: [],
+                        });
+                      }}
+                    >
+                      <Plus className="mr-2 h-5 w-5" />
+                      Create Project
+                    </Button>
                   </div>
-                )}
-
-                {/* Projects List */}
-                {projects.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg">No projects yet. Create your first project!</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {projects.map((project) => (
-                      <div
-                        key={project.id}
-                        className="group bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-purple-100"
-                      >
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">
-                              {project.title}
-                            </h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              project.status === 'OPEN' ? 'bg-green-100 text-green-700' :
-                              project.status === 'CLOSED' ? 'bg-gray-100 text-gray-700' :
-                              project.status === 'DRAFT' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-purple-100 text-purple-700'
-                            }`}>
-                              {project.status}
-                            </span>
+                </CardHeader>
+                <CardContent>
+                  {/* Create/Edit Form */}
+                  {showCreateForm && (
+                    <Card className="bg-primary/5 border-primary/20 mb-6">
+                      <CardHeader>
+                        <CardTitle>
+                          {editingProject ? 'Edit Project' : 'Create New Project'}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={editingProject ? handleUpdateProject : handleCreateProject} className="space-y-4">
+                          <div>
+                            <Label htmlFor="title">Title</Label>
+                            <Input
+                              id="title"
+                              type="text"
+                              value={projectForm.title}
+                              onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
+                              className="mt-2"
+                              required
+                            />
                           </div>
-                          <p className="text-gray-600 mb-4 text-sm line-clamp-3">
-                            {project.description || 'No description'}
-                          </p>
-                          {project.start_date && (
-                            <p className="text-xs text-gray-500 mb-2">
-                              Start: {new Date(project.start_date).toLocaleDateString()}
-                            </p>
-                          )}
-                          <div className="flex space-x-2 mt-4">
-                            <button
-                              onClick={() => startEditing(project)}
-                              disabled={deletingProject === project.id}
-                              className="flex-1 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                              id="description"
+                              value={projectForm.description}
+                              onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                              className="mt-2"
+                              rows={4}
+                              required
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <Label htmlFor="status">Status</Label>
+                              <select
+                                id="status"
+                                value={projectForm.status}
+                                onChange={(e) => setProjectForm({ ...projectForm, status: e.target.value })}
+                                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring mt-2"
+                              >
+                                <option value="DRAFT">Draft</option>
+                                <option value="OPEN">Open</option>
+                                <option value="CLOSED">Closed</option>
+                                <option value="ARCHIVED">Archived</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Label htmlFor="start_date">Start Date</Label>
+                              <Input
+                                id="start_date"
+                                type="date"
+                                value={projectForm.start_date}
+                                onChange={(e) => setProjectForm({ ...projectForm, start_date: e.target.value })}
+                                className="mt-2"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="end_date">End Date</Label>
+                              <Input
+                                id="end_date"
+                                type="date"
+                                value={projectForm.end_date}
+                                onChange={(e) => setProjectForm({ ...projectForm, end_date: e.target.value })}
+                                className="mt-2"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex space-x-4">
+                            <Button
+                              type="submit"
+                              disabled={creatingProject}
                             >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProject(project.id)}
-                              disabled={deletingProject === project.id || creatingProject}
-                              className="flex-1 px-4 py-2 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                            >
-                              {deletingProject === project.id ? (
+                              {creatingProject ? (
                                 <>
-                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                  </svg>
-                                  Deleting...
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                                  {editingProject ? 'Updating...' : 'Creating...'}
                                 </>
                               ) : (
-                                'Delete'
+                                editingProject ? 'Update Project' : 'Create Project'
                               )}
-                            </button>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={cancelForm}
+                              disabled={creatingProject}
+                            >
+                              Cancel
+                            </Button>
                           </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Projects List */}
+                  {projects.length === 0 ? (
+                    <div className="text-center py-12">
+                      <CardDescription className="text-lg">No projects yet. Create your first project!</CardDescription>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {projects.map((project) => (
+                        <Card
+                          key={project.id}
+                          className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20"
+                        >
+                          <CardHeader>
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="group-hover:text-primary transition-colors">
+                                {project.title}
+                              </CardTitle>
+                              <Badge variant={getStatusVariant(project.status)} className="text-xs uppercase tracking-wide">
+                                {project.status}
+                              </Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <CardDescription className="line-clamp-3">
+                              {project.description || 'No description'}
+                            </CardDescription>
+                            {project.start_date && (
+                              <p className="text-xs text-muted-foreground">
+                                Start: {new Date(project.start_date).toLocaleDateString()}
+                              </p>
+                            )}
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => startEditing(project)}
+                                disabled={deletingProject === project.id}
+                                className="flex-1"
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteProject(project.id)}
+                                disabled={deletingProject === project.id || creatingProject}
+                                className="flex-1"
+                              >
+                                {deletingProject === project.id ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-destructive-foreground mr-2"></div>
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  'Delete'
+                                )}
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Dashboard Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-purple-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                      <FileText className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors">
-                      Impact Reports
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle className="group-hover:text-primary transition-colors">Impact Reports</CardTitle>
+                    <CardDescription>
                       Track the impact of your initiatives and view detailed analytics
-                    </p>
-                    <div className="flex items-center text-purple-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      View Reports
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-primary">
+                      <Link href="/corporate/impact">
+                        View Reports
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-pink-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
+                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-secondary/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+                      <Users className="h-6 w-6 text-secondary" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-pink-600 transition-colors">
-                      Student Engagement
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle className="group-hover:text-secondary transition-colors">Student Engagement</CardTitle>
+                    <CardDescription>
                       See student participation metrics and track engagement
-                    </p>
-                    <div className="flex items-center text-pink-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      View Analytics
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-secondary">
+                      <Link href="/corporate/talent">
+                        View Analytics
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
 
-                <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden border border-indigo-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-indigo-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <div className="relative p-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6 transform group-hover:rotate-6 transition-transform duration-300">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-accent/20">
+                  <CardHeader>
+                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                      <DollarSign className="h-6 w-6 text-accent" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">
-                      Payments
-                    </h3>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <CardTitle className="group-hover:text-accent transition-colors">Payments</CardTitle>
+                    <CardDescription>
                       View transaction history and manage payments
-                    </p>
-                    <div className="flex items-center text-indigo-600 font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      View Payments
-                      <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button asChild variant="ghost" className="w-full justify-between group-hover:text-accent">
+                      <Link href="/corporate/settings">
+                        View Payments
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
               </div>
             </>
           ) : (
-            <div className="max-w-2xl mx-auto mt-12">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-                <h3 className="text-xl font-semibold text-yellow-800 mb-2">No Corporate Partner Found</h3>
-                <p className="text-yellow-600">Corporate Partner with ID 1 does not exist in the database.</p>
-              </div>
-            </div>
+            <Card className="border-accent/20">
+              <CardHeader>
+                <CardTitle>No Corporate Partner Found</CardTitle>
+                <CardDescription>Corporate Partner profile does not exist in the database.</CardDescription>
+              </CardHeader>
+            </Card>
           )}
         </div>
-      </main>
+      </DashboardLayout>
     </>
   );
 };

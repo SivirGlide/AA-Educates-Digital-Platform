@@ -3,6 +3,10 @@ import Link from 'next/link';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Label } from '@/src/components/ui/label';
 
 interface NotificationPrefs {
   projects: boolean;
@@ -29,89 +33,103 @@ const StudentSettingsPage: NextPage = () => {
       <Head>
         <title>Settings | AA Educates</title>
       </Head>
-      <DashboardLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -mx-6 -my-8 px-6 py-8 space-y-10">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-10">
           <header className="space-y-3">
-            <h1 className="text-3xl font-extrabold text-gray-900">Account settings</h1>
-            <p className="text-gray-600 max-w-3xl">
+            <h1 className="text-3xl font-extrabold">Account settings</h1>
+            <p className="text-muted-foreground max-w-3xl">
               Control how you access AA Educates, manage notifications, and keep your account secure. Your preferences are synced
               across devices when you stay signed in.
             </p>
           </header>
 
-          <section className="grid gap-6 lg:grid-cols-2">
-            <div className="bg-white border border-indigo-100 rounded-2xl shadow p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">Notifications</h2>
-              <p className="text-sm text-gray-600">Choose the updates you want to receive.</p>
-              <div className="space-y-4 text-sm text-gray-700">
-                {Object.entries(preferences).map(([key, value]) => (
-                  <label key={key} className="flex items-center justify-between gap-4">
-                    <span className="capitalize">{key}</span>
-                    <input
-                      type="checkbox"
-                      checked={value}
-                      onChange={(event) =>
-                        setPreferences((prev) => ({ ...prev, [key]: event.target.checked }))
-                      }
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600"
-                    />
-                  </label>
-                ))}
-              </div>
-              <button className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold hover:bg-indigo-700 transition">
-                Save preferences
-              </button>
-            </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle>Notifications</CardTitle>
+                <CardDescription>Choose the updates you want to receive.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4 text-sm">
+                  {Object.entries(preferences).map(([key, value]) => (
+                    <Label key={key} className="flex items-center justify-between gap-4 cursor-pointer">
+                      <span className="capitalize">{key}</span>
+                      <input
+                        type="checkbox"
+                        checked={value}
+                        onChange={(event) =>
+                          setPreferences((prev) => ({ ...prev, [key]: event.target.checked }))
+                        }
+                        className="h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                      />
+                    </Label>
+                  ))}
+                </div>
+                <Button>
+                  Save preferences
+                </Button>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white border border-indigo-100 rounded-2xl shadow p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">Appearance</h2>
-              <p className="text-sm text-gray-600">Match the interface to your preferences.</p>
-              <div className="flex items-center justify-between text-sm text-gray-700">
-                <span>Use dark mode when available</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  darkModeDetected ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500'
-                }`}>
-                  {darkModeDetected ? 'Detected' : 'Off'}
-                </span>
-              </div>
-              <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 text-gray-600 px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition">
-                Toggle dark mode
-              </button>
-            </div>
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle>Appearance</CardTitle>
+                <CardDescription>Match the interface to your preferences.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span>Use dark mode when available</span>
+                  <Badge variant={darkModeDetected ? 'default' : 'secondary'}>
+                    {darkModeDetected ? 'Detected' : 'Off'}
+                  </Badge>
+                </div>
+                <Button variant="outline">
+                  Toggle dark mode
+                </Button>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white border border-rose-100 rounded-2xl shadow p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">Security</h2>
-              <p className="text-sm text-gray-600">Protect your account with strong, unique credentials.</p>
-              <button className="inline-flex items-center gap-2 rounded-xl bg-rose-600 text-white px-4 py-2 text-sm font-semibold hover:bg-rose-700 transition">
-                Change password
-              </button>
-              <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 text-gray-600 px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition">
-                Manage devices
-              </button>
-            </div>
+            <Card className="border-destructive/20">
+              <CardHeader>
+                <CardTitle>Security</CardTitle>
+                <CardDescription>Protect your account with strong, unique credentials.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button variant="destructive">
+                  Change password
+                </Button>
+                <Button variant="outline">
+                  Manage devices
+                </Button>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white border border-amber-100 rounded-2xl shadow p-6 space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">Privacy</h2>
-              <p className="text-sm text-gray-600">Review how your information is used across the platform.</p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>
-                  <Link className="text-indigo-600 font-semibold" href="/terms">
-                    Read privacy summary
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-indigo-600 font-semibold" href="/contact">
-                    Request data export
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-indigo-600 font-semibold" href="/contact">
-                    Deactivate account
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </section>
+            <Card className="border-accent/20">
+              <CardHeader>
+                <CardTitle>Privacy</CardTitle>
+                <CardDescription>Review how your information is used across the platform.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <Link className="text-primary font-semibold hover:underline" href="/terms">
+                      Read privacy summary
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="text-primary font-semibold hover:underline" href="/contact">
+                      Request data export
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="text-primary font-semibold hover:underline" href="/contact">
+                      Deactivate account
+                    </Link>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </DashboardLayout>
     </>

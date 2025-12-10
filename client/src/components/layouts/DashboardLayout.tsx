@@ -210,23 +210,23 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, back
       <nav className="w-full border-b border-border/30 bg-transparent sticky top-0 z-50 relative">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            {/* Left Side - Logo and Navigation */}
-            <div className="flex items-center gap-8">
-              {/* Logo */}
-              <Link href="/" className="flex items-center">
-                <div className="relative w-32 h-10">
-                  <Image
-                    src="/AA_Educates_logo.svg"
-                    alt="AA Educates Logo"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-              </Link>
+            {/* Left Side - Logo */}
+            <Link href="/" className="flex items-center">
+              <div className="relative w-32 h-10">
+                <Image
+                  src="/AA_Educates_logo.svg"
+                  alt="AA Educates Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
+            </Link>
 
-              {/* Navigation Links */}
-              {mounted && (
+            {/* Right Side - Navigation Links and User Menu */}
+            {mounted && (
+              <div className="flex items-center gap-4">
+                {/* Navigation Links */}
                 <div className="flex items-center gap-1">
                   {navLinks.map((link) => (
                     <Link
@@ -243,12 +243,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, back
                     </Link>
                   ))}
                 </div>
-              )}
-            </div>
 
-            {/* Right Side - User Menu */}
-            {mounted && (
-              <div className="flex items-center gap-4">
+                {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">

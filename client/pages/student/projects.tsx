@@ -4,6 +4,11 @@ import type { NextPage } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
+import { ArrowRight } from 'lucide-react';
 
 interface Project {
   id: number;
@@ -51,107 +56,114 @@ const StudentProjectsPage: NextPage = () => {
       <Head>
         <title>Student Projects | AA Educates</title>
       </Head>
-      <DashboardLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -mx-6 -my-8 px-6 py-8 space-y-8">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-8">
           <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-extrabold text-gray-900">Projects marketplace</h1>
-              <p className="text-gray-600 mt-2 max-w-2xl">
+              <h1 className="text-3xl font-extrabold">Projects marketplace</h1>
+              <p className="text-muted-foreground mt-2 max-w-2xl">
                 Explore live briefs from corporate partners, revisit accepted projects, and track your submissions in one place.
               </p>
             </div>
-            <div className="bg-white border border-indigo-100 rounded-2xl shadow p-4 flex flex-col sm:flex-row gap-4 sm:items-center">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">Filter</span>
-                <select
-                  value={filters.status}
-                  onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="OPEN">Open projects</option>
-                  <option value="DRAFT">Draft</option>
-                  <option value="CLOSED">Completed</option>
-                  <option value="ALL">All projects</option>
-                </select>
-              </div>
-              <input
-                type="search"
-                placeholder="Search projects"
-                className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                value={filters.search}
-                onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
-              />
-            </div>
+            <Card className="border-primary/20">
+              <CardContent className="p-4 flex flex-col sm:flex-row gap-4 sm:items-center">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Filter</span>
+                  <select
+                    value={filters.status}
+                    onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
+                    className="rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="OPEN">Open projects</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="CLOSED">Completed</option>
+                    <option value="ALL">All projects</option>
+                  </select>
+                </div>
+                <Input
+                  type="search"
+                  placeholder="Search projects"
+                  className="flex-1"
+                  value={filters.search}
+                  onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
+                />
+              </CardContent>
+            </Card>
           </header>
 
           {loading ? (
             <div className="flex items-center justify-center min-h-[300px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
           ) : error ? (
             <div className="max-w-2xl mx-auto">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                <h2 className="text-xl font-semibold text-red-700 mb-2">Projects unavailable</h2>
-                <p className="text-red-600">{error}</p>
-              </div>
+              <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="text-destructive">Projects unavailable</CardTitle>
+                  <CardDescription className="text-destructive">{error}</CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           ) : filteredProjects.length === 0 ? (
-            <div className="max-w-2xl mx-auto text-center bg-white border border-indigo-100 rounded-2xl shadow p-10">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">No projects match your filters</h2>
-              <p className="text-gray-600 mb-6">
-                Adjust your filters or check back soon—new opportunities are added regularly by our community partners.
-              </p>
-              <button
-                onClick={() => setFilters({ status: 'OPEN', search: '' })}
-                className="inline-flex items-center px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-              >
-                Reset filters
-              </button>
-            </div>
+            <Card className="max-w-2xl mx-auto text-center border-primary/20">
+              <CardHeader>
+                <CardTitle>No projects match your filters</CardTitle>
+                <CardDescription>
+                  Adjust your filters or check back soon—new opportunities are added regularly by our community partners.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setFilters({ status: 'OPEN', search: '' })}>
+                  Reset filters
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filteredProjects.map((project) => (
-                <article
+                <Card
                   key={project.id}
-                  className="group bg-white border border-indigo-100 rounded-2xl shadow hover:shadow-xl transition-all duration-300 overflow-hidden"
+                  className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20"
                 >
-                  <div className="p-6 space-y-4">
+                  <CardHeader>
                     <div className="flex items-center justify-between text-xs uppercase tracking-wide">
-                      <span className={
-                        project.status === 'OPEN'
-                          ? 'inline-flex items-center gap-2 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold'
-                          : project.status === 'CLOSED'
-                          ? 'inline-flex items-center gap-2 px-2 py-1 rounded-full bg-gray-200 text-gray-700 font-semibold'
-                          : 'inline-flex items-center gap-2 px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold'
-                      }>
-                        {project.status}
-                      </span>
-                      {project.start_date && (
-                        <span className="text-gray-500">Starts {new Date(project.start_date).toLocaleDateString()}</span>
-                      )}
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                      {project.title}
-                    </h2>
-                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                      {project.description || 'No description provided for this project.'}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <Link
-                        href={`/student/project/${project.id}`}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                      <Badge
+                        variant={
+                          project.status === 'OPEN'
+                            ? 'default'
+                            : project.status === 'CLOSED'
+                            ? 'secondary'
+                            : 'outline'
+                        }
+                        className="text-xs"
                       >
-                        View details
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
-                      {project.end_date && (
-                        <span className="text-xs text-gray-500">Due {new Date(project.end_date).toLocaleDateString()}</span>
+                        {project.status}
+                      </Badge>
+                      {project.start_date && (
+                        <span className="text-muted-foreground">Starts {new Date(project.start_date).toLocaleDateString()}</span>
                       )}
                     </div>
-                  </div>
-                </article>
+                    <CardTitle className="group-hover:text-primary transition-colors">
+                      {project.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="leading-relaxed line-clamp-3">
+                      {project.description || 'No description provided for this project.'}
+                    </CardDescription>
+                    <div className="flex justify-between items-center">
+                      <Button asChild variant="ghost" size="sm">
+                        <Link href={`/student/project/${project.id}`}>
+                          View details
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                      {project.end_date && (
+                        <span className="text-xs text-muted-foreground">Due {new Date(project.end_date).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}

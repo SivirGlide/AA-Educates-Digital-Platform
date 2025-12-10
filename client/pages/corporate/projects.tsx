@@ -4,60 +4,13 @@ import type { NextPage } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../lib/api';
 import { Project } from '../../lib/projects.api';
-
-const navLinks = [
-  { href: '/corporate/dashboard', label: 'Dashboard' },
-  { href: '/corporate/projects', label: 'Projects' },
-  { href: '/corporate/project/new', label: 'New Project' },
-  { href: '/corporate/volunteers', label: 'Volunteers' },
-  { href: '/corporate/talent', label: 'Talent' },
-  { href: '/corporate/impact', label: 'Impact' },
-  { href: '/corporate/profile', label: 'Profile' },
-  { href: '/corporate/settings', label: 'Settings' }
-];
-
-const CorporateNav: React.FC<{ active: string }> = ({ active }) => (
-  <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-40">
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-        >
-          AA Educates
-        </Link>
-        <Link
-          href="/logout"
-          className="inline-flex lg:hidden items-center px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          Logout
-        </Link>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {navLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-              link.href === active
-                ? 'bg-purple-600 text-white shadow'
-                : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
-        <Link
-          href="/logout"
-          className="hidden lg:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          Logout
-        </Link>
-      </div>
-    </div>
-  </nav>
-);
-
+import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { Input } from '@/src/components/ui/input';
+import { Label } from '@/src/components/ui/label';
+import { ArrowRight } from 'lucide-react';
 
 const CorporateProjectsPage: NextPage = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -92,123 +45,135 @@ const CorporateProjectsPage: NextPage = () => {
       .filter((project) => project.title.toLowerCase().includes(filters.search.toLowerCase()));
   }, [projects, filters]);
 
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'OPEN':
+        return 'default';
+      case 'CLOSED':
+        return 'secondary';
+      case 'DRAFT':
+        return 'outline';
+      default:
+        return 'outline';
+    }
+  };
+
   return (
     <>
       <Head>
         <title>Corporate Projects | AA Educates</title>
       </Head>
-      <main className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50">
-        <CorporateNav active="/corporate/projects" />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-10">
           <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-extrabold text-gray-900">Projects</h1>
-              <p className="text-gray-600 max-w-2xl">
+              <h1 className="text-3xl font-extrabold">Projects</h1>
+              <p className="text-muted-foreground max-w-2xl mt-2">
                 Manage live briefs, monitor progress, and revisit archived collaborations. Create a new opportunity to engage AA Educates learners.
               </p>
             </div>
-            <Link
-              href="/corporate/project/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white px-5 py-3 font-semibold shadow hover:shadow-lg transition"
-            >
-              New project
-            </Link>
+            <Button asChild>
+              <Link href="/corporate/project/new">
+                New project
+              </Link>
+            </Button>
           </header>
 
-          <section className="bg-white border border-purple-100 rounded-2xl shadow p-6 space-y-4">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Search projects</label>
-                <input
-                  type="text"
-                  value={filters.search}
-                  onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
-                  placeholder="Search by title"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
+          <Card className="border-primary/20">
+            <CardContent className="p-6 space-y-4">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="search">Search projects</Label>
+                  <Input
+                    id="search"
+                    type="text"
+                    value={filters.search}
+                    onChange={(event) => setFilters((prev) => ({ ...prev, search: event.target.value }))}
+                    placeholder="Search by title"
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <select
+                    id="status"
+                    value={filters.status}
+                    onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
+                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring mt-2"
+                  >
+                    <option value="ALL">All</option>
+                    <option value="DRAFT">Draft</option>
+                    <option value="OPEN">Open</option>
+                    <option value="CLOSED">Closed</option>
+                    <option value="ARCHIVED">Archived</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={filters.status}
-                  onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  <option value="ALL">All</option>
-                  <option value="DRAFT">Draft</option>
-                  <option value="OPEN">Open</option>
-                  <option value="CLOSED">Closed</option>
-                  <option value="ARCHIVED">Archived</option>
-                </select>
-              </div>
-            </div>
-          </section>
+            </CardContent>
+          </Card>
 
           {loading ? (
             <div className="flex items-center justify-center min-h-[240px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
           ) : error ? (
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                <h2 className="text-xl font-semibold text-red-700 mb-2">Projects unavailable</h2>
-                <p className="text-red-600">{error}</p>
-              </div>
-            </div>
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="text-destructive">Projects unavailable</CardTitle>
+                <CardDescription className="text-destructive">{error}</CardDescription>
+              </CardHeader>
+            </Card>
           ) : filtered.length === 0 ? (
-            <div className="max-w-2xl mx-auto bg-white border border-purple-100 rounded-2xl shadow p-10 text-center">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">No projects found</h2>
-              <p className="text-gray-600 mb-6">Try adjusting the filters or create a new brief to get started.</p>
-              <button
-                onClick={() => setFilters({ status: 'ALL', search: '' })}
-                className="inline-flex items-center px-4 py-2 rounded-xl border border-gray-200 text-gray-600 font-semibold hover:bg-gray-50"
-              >
-                Clear filters
-              </button>
-            </div>
+            <Card className="border-primary/20 text-center">
+              <CardHeader>
+                <CardTitle>No projects found</CardTitle>
+                <CardDescription>Try adjusting the filters or create a new brief to get started.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline" onClick={() => setFilters({ status: 'ALL', search: '' })}>
+                  Clear filters
+                </Button>
+              </CardContent>
+            </Card>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((project) => (
-                <article key={project.id} className="group bg-white border border-purple-100 rounded-2xl shadow hover:shadow-xl transition p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">{project.title}</h2>
-                    <span className={`px-3 py-1 text-xs font-semibold uppercase tracking-wide rounded-full ${
-                      project.status === 'OPEN'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : project.status === 'CLOSED'
-                        ? 'bg-gray-100 text-gray-700'
-                        : 'bg-amber-100 text-amber-700'
-                    }`}>
-                      {project.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    {project.description || 'No description provided.'}
-                  </p>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Created {new Date(project.created_at).toLocaleDateString()}</span>
-                    {project.start_date && <span>Starts {new Date(project.start_date).toLocaleDateString()}</span>}
-                  </div>
-                  <div className="flex gap-3">
-                    <Link
-                      href={`/corporate/dashboard?project=${project.id}`}
-                      className="inline-flex items-center gap-2 rounded-xl bg-purple-600 text-white px-4 py-2 text-sm font-semibold hover:bg-purple-700 transition"
-                    >
-                      Manage
-                    </Link>
-                    <Link
-                      href={`/student/project/${project.id}`}
-                      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 text-gray-600 px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition"
-                    >
-                      View as student
-                    </Link>
-                  </div>
-                </article>
+                <Card key={project.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="group-hover:text-primary transition-colors">{project.title}</CardTitle>
+                      <Badge variant={getStatusVariant(project.status)} className="text-xs uppercase tracking-wide">
+                        {project.status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="leading-relaxed">
+                      {project.description || 'No description provided.'}
+                    </CardDescription>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>Created {new Date(project.created_at).toLocaleDateString()}</span>
+                      {project.start_date && <span>Starts {new Date(project.start_date).toLocaleDateString()}</span>}
+                    </div>
+                    <div className="flex gap-3">
+                      <Button asChild variant="default" size="sm">
+                        <Link href={`/corporate/dashboard?project=${project.id}`}>
+                          Manage
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/student/project/${project.id}`}>
+                          View as student
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
         </div>
-      </main>
+      </DashboardLayout>
     </>
   );
 };

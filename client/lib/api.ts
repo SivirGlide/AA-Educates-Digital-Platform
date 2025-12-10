@@ -167,6 +167,7 @@ export const api = {
   
   // Users
   getUser: usersApi.getUser,
+  getUsers: usersApi.getUsers,
   getStudent: usersApi.getStudent,
   getStudents: usersApi.getStudents,
   getParent: usersApi.getParent,
