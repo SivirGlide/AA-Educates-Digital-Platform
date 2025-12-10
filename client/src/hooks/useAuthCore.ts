@@ -179,14 +179,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const storedUser = loadStoredUser();
-    const storedAccessToken = loadToken(ACCESS_TOKEN_KEY);
-    const storedRefreshToken = loadToken(REFRESH_TOKEN_KEY);
+    const loadAuthState = () => {
+      const storedUser = loadStoredUser();
+      const storedAccessToken = loadToken(ACCESS_TOKEN_KEY);
+      const storedRefreshToken = loadToken(REFRESH_TOKEN_KEY);
 
-    setUser(storedUser);
-    setAccessToken(storedAccessToken);
-    setRefreshToken(storedRefreshToken);
-    setLoading(false);
+      setUser(storedUser);
+      setAccessToken(storedAccessToken);
+      setRefreshToken(storedRefreshToken);
+      setLoading(false);
+    };
+
+    loadAuthState();
+
+    // Listen for storage changes (e.g., when logging in from another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === ACCESS_TOKEN_KEY || e.key === USER_KEY || e.key === USER_ROLE_KEY) {
+        loadAuthState();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const role = useMemo(() => {
@@ -253,6 +270,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAccessToken(null);
     setRefreshToken(null);
     setError(null);
+    setLoading(false);
+    // Force a reload to clear any cached state
+    if (isBrowser) {
+      window.location.href = '/login';
+    }
   }, []);
 
   const isAuthenticated = useMemo(

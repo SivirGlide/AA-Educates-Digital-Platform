@@ -123,8 +123,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, back
   });
 
   const handleLogout = () => {
-    logout();
-    router.push('/login');
+    // Navigate to logout page which will handle the smooth transition
+    router.push('/logout');
   };
 
   // Get user's first name and last name for display

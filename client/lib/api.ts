@@ -195,6 +195,7 @@ export const api = {
   // Payments
   createCheckoutSession: paymentsApi.createCheckoutSession,
   verifyPayment: paymentsApi.verifyPayment,
+  getPaymentTransactions: paymentsApi.getPaymentTransactions,
 };
 
 export default api;

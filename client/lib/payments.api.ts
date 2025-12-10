@@ -50,3 +50,23 @@ export function verifyPayment(data: VerifyPaymentRequest): Promise<ApiResponse<V
     body: JSON.stringify(data),
   });
 }
+
+export interface PaymentTransaction {
+  id: number;
+  user: number;
+  amount: string;
+  currency: string;
+  provider: string;
+  transaction_id: string;
+  status: string;
+  created_at: string;
+}
+
+/**
+ * Get all payment transactions
+ */
+export function getPaymentTransactions(): Promise<ApiResponse<PaymentTransaction[]>> {
+  return fetchApi<PaymentTransaction[]>('/payments/payment-transactions/', {
+    method: 'GET',
+  });
+}

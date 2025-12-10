@@ -1,11 +1,14 @@
 import Head from 'next/head';
 import type { NextPage } from 'next';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Button } from '@/src/components/ui/button';
 import { Badge } from '@/src/components/ui/badge';
+import { api } from '../../lib/api';
+import { Loader2 } from 'lucide-react';
+import type { PaymentTransaction } from '../../lib/payments.api';
 
 const transactions = [
   { id: 'INV-4021', account: 'Corporate partner', amount: 1250, status: 'Paid', date: '2025-10-18T10:32:00Z' },
@@ -15,6 +18,9 @@ const transactions = [
 
 const AdminPaymentsPage: NextPage = () => {
   const [status, setStatus] = useState('ALL');
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((txn) => (status === 'ALL' ? true : txn.status === status));
@@ -23,6 +29,59 @@ const AdminPaymentsPage: NextPage = () => {
   const total = useMemo(() => {
     return filteredTransactions.reduce((sum, txn) => (txn.status === 'Paid' ? sum + txn.amount : sum), 0);
   }, [filteredTransactions]);
+
+  useEffect(() => {
+    const fetchPaymentTransactions = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await api.getPaymentTransactions();
+        if (response.error) {
+          setError(response.error);
+        } else if (response.data) {
+          setPaymentTransactions(response.data);
+        }
+      } catch (err) {
+        setError('Failed to fetch payment transactions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPaymentTransactions();
+  }, []);
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case 'SUCCEEDED':
+        return 'Paid';
+      case 'PENDING':
+        return 'Pending';
+      case 'FAILED':
+        return 'Failed';
+      default:
+        return status;
+    }
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'SUCCEEDED':
+        return 'default';
+      case 'PENDING':
+        return 'secondary';
+      case 'FAILED':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
+
+  const paymentTransactionsTotal = useMemo(() => {
+    return paymentTransactions
+      .filter(txn => txn.status === 'SUCCEEDED')
+      .reduce((sum, txn) => sum + parseFloat(txn.amount), 0);
+  }, [paymentTransactions]);
 
   return (
     <>
@@ -35,6 +94,58 @@ const AdminPaymentsPage: NextPage = () => {
             <h1 className="text-3xl font-extrabold">Payments</h1>
             <p className="text-muted-foreground max-w-3xl">Track invoices, subscriptions, and membership payments across AA Educates.</p>
           </header>
+
+          {/* Payment Transactions Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Transactions</CardTitle>
+              <CardDescription>
+                Real-time payment transactions from Stripe and other payment providers
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : error ? (
+                <div className="text-sm text-destructive py-4">{error}</div>
+              ) : paymentTransactions.length === 0 ? (
+                <div className="text-sm text-muted-foreground py-4 text-center">No payment transactions found.</div>
+              ) : (
+                <>
+                  <div className="text-sm text-muted-foreground mb-4">
+                    Total successful payments: <span className="font-semibold">£{paymentTransactionsTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="space-y-2 divide-y divide-border">
+                    {paymentTransactions.map((txn) => (
+                      <div key={txn.id} className="py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3">
+                            <h3 className="font-semibold">Transaction #{txn.transaction_id.slice(0, 20)}...</h3>
+                            <Badge variant="outline" className="text-xs">
+                              {txn.provider}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            User ID: {txn.user} • {new Date(txn.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                          <span className="text-lg font-semibold">
+                            {txn.currency} {parseFloat(txn.amount).toFixed(2)}
+                          </span>
+                          <Badge variant={getStatusVariant(txn.status) as any}>
+                            {formatStatus(txn.status)}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardContent className="p-6 space-y-4">
