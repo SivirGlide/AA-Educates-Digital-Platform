@@ -4,15 +4,7 @@ import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
-
-interface Certificate {
-  id: number;
-  name: string;
-  description: string;
-  issued_on: string;
-  issuer: string;
-  credential_url?: string;
-}
+import type { Certificate } from '../../lib/certificates.api';
 
 const StudentCertificatesPage: NextPage = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -26,15 +18,7 @@ const StudentCertificatesPage: NextPage = () => {
         if (response.error || !Array.isArray(response.data)) {
           setError(response.error || 'Unable to load certificates');
         } else {
-          const mapped = (response.data as any[]).map((cert, index) => ({
-            id: cert.id,
-            name: cert.name || `Certificate ${index + 1}`,
-            description: cert.description || 'Certificate description coming soon.',
-            issued_on: cert.created_at || new Date().toISOString(),
-            issuer: cert.issuer || 'AA Educates partner',
-            credential_url: cert.credential_url
-          }));
-          setCertificates(mapped);
+          setCertificates(response.data as Certificate[]);
         }
       } catch (err) {
         setError('Something went wrong while fetching certificates');
@@ -77,15 +61,15 @@ const StudentCertificatesPage: NextPage = () => {
               {certificates.map((certificate) => (
                 <article key={certificate.id} className="bg-white border border-indigo-100 rounded-2xl shadow hover:shadow-lg transition p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">{certificate.name}</h2>
-                    <span className="text-xs uppercase tracking-wide text-indigo-500">{certificate.issuer}</span>
+                    <h2 className="text-xl font-semibold text-gray-900">{certificate.title}</h2>
+                    <span className="text-xs uppercase tracking-wide text-indigo-500">AA Educates</span>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{certificate.description}</p>
-                  <p className="text-xs text-gray-500">Issued {new Date(certificate.issued_on).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{certificate.description || 'Certificate description coming soon.'}</p>
+                  <p className="text-xs text-gray-500">Issued {new Date(certificate.issue_date).toLocaleDateString()}</p>
                   <div className="flex flex-wrap gap-3">
-                    {certificate.credential_url && (
+                    {certificate.file && (
                       <Link
-                        href={certificate.credential_url}
+                        href={certificate.file}
                         target="_blank"
                         className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold hover:bg-indigo-700 transition"
                       >

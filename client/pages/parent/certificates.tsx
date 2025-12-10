@@ -3,15 +3,7 @@ import Link from 'next/link';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
-
-interface Certificate {
-  id: number;
-  student_id: number;
-  name: string;
-  description: string;
-  issued_on: string;
-  issuer: string;
-}
+import type { Certificate } from '../../lib/certificates.api';
 
 const navLinks = [
   { href: '/parent/dashboard', label: 'Dashboard' },
@@ -96,18 +88,10 @@ const ParentCertificatesPage: NextPage = () => {
           return;
         }
 
-        const mapped = (certificatesResponse.data as any[])
-          .filter((cert) => childIds.includes(cert.student || cert.student_id || 0))
-          .map((cert) => ({
-            id: cert.id,
-            student_id: cert.student || cert.student_id || 0,
-            name: cert.name || 'Certificate of achievement',
-            description: cert.description || 'Awarded for participation in AA Educates learning experiences.',
-            issued_on: cert.created_at || cert.issued_on || new Date().toISOString(),
-            issuer: cert.issuer || 'AA Educates partner'
-          }));
+        const filtered = (certificatesResponse.data as Certificate[])
+          .filter((cert) => childIds.includes(cert.issued_to));
 
-        setCertificates(mapped);
+        setCertificates(filtered);
       } catch (err) {
         setError('Something went wrong while fetching certificates');
       } finally {
@@ -157,18 +141,28 @@ const ParentCertificatesPage: NextPage = () => {
               {certificates.map((certificate) => (
                 <article key={certificate.id} className="bg-white border border-green-100 rounded-2xl shadow hover:shadow-lg transition p-6 space-y-4">
                   <div className="space-y-1">
-                    <p className="text-xs uppercase tracking-wide text-teal-500">Student #{certificate.student_id}</p>
-                    <h2 className="text-xl font-semibold text-gray-900">{certificate.name}</h2>
+                    <p className="text-xs uppercase tracking-wide text-teal-500">Student #{certificate.issued_to}</p>
+                    <h2 className="text-xl font-semibold text-gray-900">{certificate.title}</h2>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{certificate.description}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{certificate.description || 'Awarded for participation in AA Educates learning experiences.'}</p>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Issued {new Date(certificate.issued_on).toLocaleDateString()}</span>
-                    <span>{certificate.issuer}</span>
+                    <span>Issued {new Date(certificate.issue_date).toLocaleDateString()}</span>
+                    <span>AA Educates</span>
                   </div>
                   <div className="flex gap-3">
-                    <button className="inline-flex items-center gap-2 rounded-xl bg-teal-600 text-white px-4 py-2 text-sm font-semibold hover:bg-teal-700 transition">
-                      Download PDF
-                    </button>
+                    {certificate.file ? (
+                      <Link
+                        href={certificate.file}
+                        target="_blank"
+                        className="inline-flex items-center gap-2 rounded-xl bg-teal-600 text-white px-4 py-2 text-sm font-semibold hover:bg-teal-700 transition"
+                      >
+                        Download PDF
+                      </Link>
+                    ) : (
+                      <button className="inline-flex items-center gap-2 rounded-xl bg-teal-600 text-white px-4 py-2 text-sm font-semibold hover:bg-teal-700 transition">
+                        Download PDF
+                      </button>
+                    )}
                     <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 text-gray-600 px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition">
                       Share with school
                     </button>

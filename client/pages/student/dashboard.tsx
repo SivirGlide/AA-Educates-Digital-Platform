@@ -85,32 +85,57 @@ const StudentDashboard: NextPage = () => {
   useEffect(() => {
     const fetchStudentData = async () => {
       try {
-        // Get profile ID from localStorage (set during login)
-        const profileId = localStorage.getItem('profileId');
+        // Get user ID from localStorage (set during login)
         const userId = localStorage.getItem('userId');
-        
-        if (!profileId || !userId) {
+        const accessToken = localStorage.getItem('access_token');
+
+        console.log('LocalStorage check:');
+        console.log('  userId:', userId);
+        console.log('  access_token:', accessToken ? 'Present (length: ' + accessToken.length + ')' : 'MISSING!');
+
+        if (!userId) {
           setError('Please login to access your dashboard');
           setLoading(false);
           return;
         }
 
-        // Fetch student profile using authenticated user's profile ID
-        const studentResponse = await api.getStudent(parseInt(profileId));
-        if (studentResponse.error) {
-          setError(studentResponse.error);
+        if (!accessToken) {
+          setError('No authentication token found. Please login again.');
           setLoading(false);
           return;
         }
 
-        if (studentResponse.data) {
-          setStudent(studentResponse.data as StudentProfile);
-          
+        // Fetch student profile using list endpoint (returns only user's own profile)
+        const studentsResponse = await api.getStudents();
+
+        console.log('Students API Response:', studentsResponse);
+
+        if (studentsResponse.error) {
+          console.error('Error from API:', studentsResponse.error);
+          setError(studentsResponse.error);
+          setLoading(false);
+          return;
+        }
+
+        // Get the first (and only) profile from the list
+        const studentProfiles = Array.isArray(studentsResponse.data)
+          ? studentsResponse.data
+          : (studentsResponse.data as any)?.results || [];
+
+        console.log('Parsed student profiles:', studentProfiles);
+        console.log('Profile count:', studentProfiles.length);
+
+        if (studentProfiles.length > 0) {
+          console.log('Setting student profile:', studentProfiles[0]);
+          setStudent(studentProfiles[0] as StudentProfile);
+
           // Fetch user data
           const userResponse = await api.getUser(parseInt(userId));
           if (userResponse.data) {
             setUser(userResponse.data as User);
           }
+        } else {
+          setError('No student profile found. Please contact support.');
         }
       } catch (err) {
         setError('Failed to load student data');

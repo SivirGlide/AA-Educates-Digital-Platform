@@ -33,7 +33,7 @@ const StudentMentoringPage: NextPage = () => {
             topic: project.title,
             scheduled_at: new Date(Date.now() + index * 86400000).toISOString(),
             duration_minutes: 45,
-            status: index % 3 === 2 ? 'COMPLETED' : 'SCHEDULED',
+            status: (index % 3 === 2 ? 'COMPLETED' : 'SCHEDULED') as 'COMPLETED' | 'CANCELLED' | 'SCHEDULED',
             notes: project.description || 'Overview of goals and expectations.'
           }));
           setSessions(mockSessions);

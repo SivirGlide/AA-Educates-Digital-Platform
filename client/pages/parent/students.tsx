@@ -94,7 +94,7 @@ const ParentStudentsPage: NextPage = () => {
           return;
         }
 
-        const childIds: number[] = parentResponse.data.students || [];
+        const childIds: number[] = (parentResponse.data as any).students || [];
         if (childIds.length === 0) {
           setStudents([]);
           setLoading(false);
