@@ -8,6 +8,7 @@ import * as usersApi from './users.api';
 import * as projectsApi from './projects.api';
 import * as mentorsApi from './mentors.api';
 import * as certificatesApi from './certificates.api';
+import * as paymentsApi from './payments.api';
 
 // Base API URL
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
@@ -190,6 +191,10 @@ export const api = {
   getBadges: certificatesApi.getBadges,
   getCertificates: certificatesApi.getCertificates,
   getSkills: certificatesApi.getSkills,
+  
+  // Payments
+  createCheckoutSession: paymentsApi.createCheckoutSession,
+  verifyPayment: paymentsApi.verifyPayment,
 };
 
 export default api;

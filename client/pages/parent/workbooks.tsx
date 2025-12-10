@@ -89,7 +89,11 @@ const ParentWorkbooksPage: NextPage = () => {
                       <Button asChild>
                         <Link href={workbook.url}>View preview</Link>
                       </Button>
-                      <Button variant="outline">Add to basket</Button>
+                      <Button asChild variant="outline">
+                        <Link href={`/checkout?payment_type=workbook&workbook_id=${workbook.id}`}>
+                          Purchase Workbook
+                        </Link>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
