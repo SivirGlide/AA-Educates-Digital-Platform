@@ -4,59 +4,28 @@ import { useRouter } from 'next/router';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { api } from '../../../lib/api';
+import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { ArrowLeft } from 'lucide-react';
 
-const adminNavLinks = [
-  { href: '/admin/dashboard', label: 'Dashboard' },
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/content', label: 'Content' },
-  { href: '/admin/analytics', label: 'Analytics' },
-  { href: '/admin/payments', label: 'Payments' },
-  { href: '/admin/crm', label: 'CRM' },
-  { href: '/admin/roles', label: 'Roles' },
-  { href: '/admin/settings', label: 'Settings' }
-];
+const formatLabel = (value: string) =>
+  value
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
-const AdminNav: React.FC<{ active: string }> = ({ active }) => (
-  <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-40">
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-        >
-          AA Educates
-        </Link>
-        <Link
-          href="/logout"
-          className="inline-flex lg:hidden items-center px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          Logout
-        </Link>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {adminNavLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-              link.href === active
-                ? 'bg-blue-600 text-white shadow'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
-        <Link
-          href="/logout"
-          className="hidden lg:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          Logout
-        </Link>
-      </div>
-    </div>
-  </nav>
-);
+const formatRole = (role: string) => {
+  const roleUpper = (role || '').toUpperCase();
+  if (roleUpper === 'STUDENT') return 'Student';
+  if (roleUpper === 'PARENT') return 'Parent';
+  if (roleUpper === 'CORPORATE_PARTNER') return 'Corporate Partner';
+  if (roleUpper === 'ADMIN') return 'Admin';
+  if (roleUpper === 'SCHOOL') return 'School';
+  return formatLabel(role || 'Unknown');
+};
 
 const AdminUserDetailPage: NextPage = () => {
   const router = useRouter();
@@ -94,57 +63,101 @@ const AdminUserDetailPage: NextPage = () => {
     fetchUser();
   }, [id]);
 
+  const displayName = user?.first_name && user?.last_name
+    ? `${user.first_name} ${user.last_name}`.trim()
+    : user?.first_name || user?.username || 'Unknown user';
+
   return (
     <>
       <Head>
         <title>Admin User Detail | AA Educates</title>
       </Head>
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50">
-        <AdminNav active="/admin/users" />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
-          <Link href="/admin/users" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
-            ← Back to users
-          </Link>
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-8">
+          <Button asChild variant="ghost" className="mb-4">
+            <Link href="/admin/users">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to users
+            </Link>
+          </Button>
 
           {loading ? (
             <div className="flex items-center justify-center min-h-[240px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
           ) : error ? (
-            <div className="max-w-2xl">
-              <div className="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center">
-                <h2 className="text-xl font-semibold text-rose-700 mb-2">User unavailable</h2>
-                <p className="text-rose-600">{error}</p>
-              </div>
-            </div>
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="text-destructive">User unavailable</CardTitle>
+                <CardDescription className="text-destructive">{error}</CardDescription>
+              </CardHeader>
+            </Card>
           ) : user ? (
-            <section className="bg-white border border-blue-100 rounded-2xl shadow p-8 space-y-6">
-              <header className="space-y-2">
-                <h1 className="text-3xl font-extrabold text-gray-900">{user.username || user.full_name || 'Unknown user'}</h1>
-                <p className="text-gray-600">{user.email || 'No email available'}</p>
-              </header>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Profile</h2>
-                  <p className="text-sm text-gray-600">Role: {user.role || 'Unknown'}</p>
-                  <p className="text-sm text-gray-600">Joined: {user.date_joined ? new Date(user.date_joined).toLocaleDateString() : 'Unknown'}</p>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-3xl">{displayName}</CardTitle>
+                    <CardDescription className="text-lg mt-2">{user.email || 'No email available'}</CardDescription>
+                  </div>
+                  <Badge variant="secondary" className="text-sm uppercase tracking-wide">
+                    {formatRole(user.role || 'Unknown')}
+                  </Badge>
                 </div>
-                <div className="space-y-2">
-                  <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Status</h2>
-                  <p className="text-sm text-gray-600">Active: {user.is_active === false ? 'No' : 'Yes'}</p>
-                  <p className="text-sm text-gray-600">Verified: {user.is_verified ? 'Yes' : 'No'}</p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Profile</h2>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Role:</span>
+                        <Badge variant="outline">{formatRole(user.role || 'Unknown')}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Joined: {user.date_joined ? new Date(user.date_joined).toLocaleDateString() : 'Unknown'}
+                      </p>
+                      {user.username && (
+                        <p className="text-sm text-muted-foreground">
+                          Username: {user.username}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Status</h2>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Active:</span>
+                        <Badge variant={user.is_active === false ? 'outline' : 'default'}>
+                          {user.is_active === false ? 'No' : 'Yes'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">Verified:</span>
+                        <Badge variant={user.is_verified ? 'default' : 'outline'}>
+                          {user.is_verified ? 'Yes' : 'No'}
+                        </Badge>
+                      </div>
+                      {user.is_staff && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">Staff:</span>
+                          <Badge variant="default">Yes</Badge>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <section className="space-y-3">
-                <h2 className="text-lg font-semibold text-gray-900">Recent activity</h2>
-                <p className="text-sm text-gray-600">Activity timeline will appear here once analytics are connected.</p>
-              </section>
-            </section>
+                <div className="border-t pt-6">
+                  <h2 className="text-lg font-semibold mb-3">Recent activity</h2>
+                  <p className="text-sm text-muted-foreground">Activity timeline will appear here once analytics are connected.</p>
+                </div>
+              </CardContent>
+            </Card>
           ) : null}
         </div>
-      </main>
+      </DashboardLayout>
     </>
   );
 };

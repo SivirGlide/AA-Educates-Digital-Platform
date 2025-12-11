@@ -1,9 +1,11 @@
 import Head from 'next/head';
-import Link from 'next/link';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
 
 interface Post {
   id: number;
@@ -47,11 +49,11 @@ const StudentCommunityPage: NextPage = () => {
       <Head>
         <title>Community | AA Educates</title>
       </Head>
-      <DashboardLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -mx-6 -my-8 px-6 py-8 space-y-10">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-10">
           <header className="space-y-3">
-            <h1 className="text-3xl font-extrabold text-gray-900">Community feed</h1>
-            <p className="text-gray-600 max-w-3xl">
+            <h1 className="text-3xl font-extrabold">Community feed</h1>
+            <p className="text-muted-foreground max-w-3xl">
               Celebrate wins, ask questions, and collaborate with peers from across the AA Educates network. This space is moderated to
               keep everyone safe and supported.
             </p>
@@ -59,48 +61,55 @@ const StudentCommunityPage: NextPage = () => {
 
           {loading ? (
             <div className="flex items-center justify-center min-h-[280px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
           ) : error ? (
             <div className="max-w-2xl mx-auto">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                <h2 className="text-xl font-semibold text-red-700 mb-2">Community unavailable</h2>
-                <p className="text-red-600">{error}</p>
-              </div>
+              <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="text-destructive">Community unavailable</CardTitle>
+                  <CardDescription className="text-destructive">{error}</CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           ) : (
             <div className="space-y-6">
-              <section className="bg-white border border-indigo-100 rounded-2xl shadow p-6 space-y-4">
-                <h2 className="text-lg font-semibold text-gray-900">Share something new</h2>
-                <textarea
-                  rows={4}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="What are you working on or curious about today?"
-                />
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>Be kind. Protect your privacy. Credit collaborators.</span>
-                  <button className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 font-semibold hover:bg-indigo-700 transition">
-                    Post update
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </button>
-                </div>
-              </section>
+              <Card className="border-primary/20">
+                <CardHeader>
+                  <CardTitle>Share something new</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <textarea
+                    rows={4}
+                    className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="What are you working on or curious about today?"
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground items-center">
+                    <span>Be kind. Protect your privacy. Credit collaborators.</span>
+                    <Button>
+                      Post update
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               {posts.map((post) => (
-                <article key={post.id} className="bg-white border border-indigo-100 rounded-2xl shadow p-6 space-y-3">
-                  <div className="flex items-center justify-between text-sm text-gray-500">
-                    <span className="font-semibold text-gray-700">{post.author}</span>
-                    <time>{new Date(post.created_at).toLocaleString()}</time>
-                  </div>
-                  <p className="text-gray-700 leading-relaxed">{post.content}</p>
-                  <div className="flex gap-4 text-sm text-gray-500">
-                    <button className="inline-flex items-center gap-1 text-indigo-600 font-semibold">Like</button>
-                    <button className="inline-flex items-center gap-1 text-indigo-600 font-semibold">Comment</button>
-                    <button className="inline-flex items-center gap-1 text-indigo-600 font-semibold">Share</button>
-                  </div>
-                </article>
+                <Card key={post.id} className="border-primary/20">
+                  <CardHeader>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-semibold">{post.author}</span>
+                      <time className="text-muted-foreground">{new Date(post.created_at).toLocaleString()}</time>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="leading-relaxed">{post.content}</p>
+                    <div className="flex gap-4 text-sm">
+                      <Button variant="ghost" size="sm">Like</Button>
+                      <Button variant="ghost" size="sm">Comment</Button>
+                      <Button variant="ghost" size="sm">Share</Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}

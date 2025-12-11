@@ -25,8 +25,12 @@ const HomePage: NextPage = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
           {/* Decorative Background Shapes */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {/* Left side - Purple */}
-            <div className="absolute top-40 -left-56 w-96 h-96 rounded-full bg-primary" />
+            {/* Left side - 3 Purple Rectangles */}
+            <div className="absolute top-40 -left-32 flex items-center gap-8 rotate-90">
+              <div className="w-24 h-96 bg-primary" />
+              <div className="w-24 h-96 bg-primary" />
+              <div className="w-24 h-96 bg-primary" />
+            </div>
             {/* Right side - Teal */}
             <div className="absolute top-10 -right-64 w-[28rem] h-[28rem] rounded-full bg-secondary" />
             {/* Bottom right - Orange */}
@@ -53,7 +57,7 @@ const HomePage: NextPage = () => {
                   Empowering the Next Generation
                 </Badge>
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-foreground">
-                  Shaping Futures from the{' '}
+                  <span className="text-accent">Shaping</span> Futures from the{' '}
                   <span className="text-primary">classroom</span> to the{' '}
                   <span className="text-secondary">workplace</span>
                 </h1>

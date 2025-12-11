@@ -4,6 +4,9 @@ import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
 import type { Certificate } from '../../lib/certificates.api';
 
 const StudentCertificatesPage: NextPage = () => {
@@ -35,11 +38,11 @@ const StudentCertificatesPage: NextPage = () => {
       <Head>
         <title>Certificates | AA Educates</title>
       </Head>
-      <DashboardLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -mx-6 -my-8 px-6 py-8 space-y-10">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-10">
           <header className="space-y-3">
-            <h1 className="text-3xl font-extrabold text-gray-900">Certificates & digital credentials</h1>
-            <p className="text-gray-600 max-w-3xl">
+            <h1 className="text-3xl font-extrabold">Certificates & digital credentials</h1>
+            <p className="text-muted-foreground max-w-3xl">
               Collect evidence of your impact, celebrate completed experiences, and share verifiable credentials with employers or
               further education providers.
             </p>
@@ -47,40 +50,44 @@ const StudentCertificatesPage: NextPage = () => {
 
           {loading ? (
             <div className="flex items-center justify-center min-h-[280px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
           ) : error ? (
             <div className="max-w-2xl mx-auto">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                <h2 className="text-xl font-semibold text-red-700 mb-2">Certificates unavailable</h2>
-                <p className="text-red-600">{error}</p>
-              </div>
+              <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="text-destructive">Certificates unavailable</CardTitle>
+                  <CardDescription className="text-destructive">{error}</CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {certificates.map((certificate) => (
-                <article key={certificate.id} className="bg-white border border-indigo-100 rounded-2xl shadow hover:shadow-lg transition p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">{certificate.title}</h2>
-                    <span className="text-xs uppercase tracking-wide text-indigo-500">AA Educates</span>
-                  </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{certificate.description || 'Certificate description coming soon.'}</p>
-                  <p className="text-xs text-gray-500">Issued {new Date(certificate.issue_date).toLocaleDateString()}</p>
-                  <div className="flex flex-wrap gap-3">
-                    {certificate.file && (
-                      <Link
-                        href={certificate.file}
-                        target="_blank"
-                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold hover:bg-indigo-700 transition"
-                      >
-                        View credential
-                      </Link>
-                    )}
-                    <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 text-gray-600 px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition">
-                      Download PDF
-                    </button>
-                  </div>
-                </article>
+                <Card key={certificate.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-primary/20">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>{certificate.title}</CardTitle>
+                      <Badge variant="secondary" className="text-xs uppercase tracking-wide">AA Educates</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="leading-relaxed">{certificate.description || 'Certificate description coming soon.'}</CardDescription>
+                    <p className="text-xs text-muted-foreground">Issued {new Date(certificate.issue_date).toLocaleDateString()}</p>
+                    <div className="flex flex-wrap gap-3">
+                      {certificate.file && (
+                        <Button asChild>
+                          <Link href={certificate.file} target="_blank">
+                            View credential
+                          </Link>
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm">
+                        Download PDF
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}

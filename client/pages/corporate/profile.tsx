@@ -3,6 +3,11 @@ import type { NextPage } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
+import { ExternalLink } from 'lucide-react';
 
 interface CorporateProfile {
   id: number;
@@ -14,60 +19,6 @@ interface CorporateProfile {
   created_at: string;
   updated_at: string;
 }
-
-const navLinks = [
-  { href: '/corporate/dashboard', label: 'Dashboard' },
-  { href: '/corporate/projects', label: 'Projects' },
-  { href: '/corporate/project/new', label: 'New Project' },
-  { href: '/corporate/volunteers', label: 'Volunteers' },
-  { href: '/corporate/talent', label: 'Talent' },
-  { href: '/corporate/impact', label: 'Impact' },
-  { href: '/corporate/profile', label: 'Profile' },
-  { href: '/corporate/settings', label: 'Settings' }
-];
-
-const CorporateNav: React.FC<{ active: string }> = ({ active }) => (
-  <nav className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-40">
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-        >
-          AA Educates
-        </Link>
-        <Link
-          href="/logout"
-          className="inline-flex lg:hidden items-center px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          Logout
-        </Link>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        {navLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-              link.href === active
-                ? 'bg-purple-600 text-white shadow'
-                : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
-        <Link
-          href="/logout"
-          className="hidden lg:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-        >
-          Logout
-        </Link>
-      </div>
-    </div>
-  </nav>
-);
-
 
 const CorporateProfilePage: NextPage = () => {
   const [profile, setProfile] = useState<CorporateProfile | null>(null);
@@ -108,78 +59,99 @@ const CorporateProfilePage: NextPage = () => {
       <Head>
         <title>Corporate Profile | AA Educates</title>
       </Head>
-      <main className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-pink-50">
-        <CorporateNav active="/corporate/profile" />
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-10">
           {loading ? (
             <div className="flex items-center justify-center min-h-[320px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
           ) : error ? (
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                <h2 className="text-xl font-semibold text-red-700 mb-2">Profile unavailable</h2>
-                <p className="text-red-600">{error}</p>
-              </div>
-            </div>
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="text-destructive">Profile unavailable</CardTitle>
+                <CardDescription className="text-destructive">{error}</CardDescription>
+              </CardHeader>
+            </Card>
           ) : profile ? (
-            <section className="bg-white border border-purple-100 rounded-2xl shadow p-8 space-y-8">
-              <header className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                  <h1 className="text-3xl font-extrabold text-gray-900">{profile.company_name}</h1>
-                  <p className="text-gray-600">Industry: {profile.industry || 'Not specified'}</p>
-                  <div className="flex flex-wrap gap-3 mt-4 text-sm text-purple-600 font-semibold">
-                    {profile.website && (
-                      <Link href={profile.website} target="_blank" className="hover:text-purple-700">
-                        Visit website
-                      </Link>
-                    )}
-                    {profile.csr_report_link && (
-                      <Link href={profile.csr_report_link} target="_blank" className="hover:text-purple-700">
-                        View CSR report
-                      </Link>
-                    )}
+            <Card className="border-primary/20">
+              <CardHeader>
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-3xl mb-2">{profile.company_name}</CardTitle>
+                    <CardDescription>Industry: {profile.industry || 'Not specified'}</CardDescription>
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      {profile.website && (
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={profile.website} target="_blank">
+                            Visit website
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      )}
+                      {profile.csr_report_link && (
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={profile.csr_report_link} target="_blank">
+                            View CSR report
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
+                  <Button asChild>
+                    <Link href="/corporate/settings">
+                      Edit profile
+                    </Link>
+                  </Button>
                 </div>
-                <Link
-                  href="/corporate/settings"
-                  className="inline-flex items-center gap-2 rounded-xl bg-purple-600 text-white px-4 py-2 text-sm font-semibold hover:bg-purple-700 transition"
-                >
-                  Edit profile
-                </Link>
-              </header>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                <section className="space-y-4">
+                  <CardTitle>About your organisation</CardTitle>
+                  <CardDescription className="leading-relaxed">
+                    {profile.about || 'Share your mission, focus areas, and how you collaborate with AA Educates.'}
+                  </CardDescription>
+                </section>
 
-              <section className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">About your organisation</h2>
-                <p className="text-gray-600 leading-relaxed">
-                  {profile.about || 'Share your mission, focus areas, and how you collaborate with AA Educates.'}
-                </p>
-              </section>
-
-              <section className="grid gap-6 md:grid-cols-2">
-                <div className="bg-purple-50 border border-purple-100 rounded-2xl p-6 space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-900">Programmes with AA Educates</h3>
-                  <p className="text-gray-600">Track the initiatives your organisation has launched with our learners.</p>
-                  <Link href="/corporate/projects" className="text-purple-600 font-semibold hover:text-purple-700">
-                    View programmes →
-                  </Link>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card className="border-primary/20">
+                    <CardHeader>
+                      <CardTitle>Programmes with AA Educates</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription>Track the initiatives your organisation has launched with our learners.</CardDescription>
+                      <Button asChild variant="ghost" className="mt-4">
+                        <Link href="/corporate/projects">
+                          View programmes
+                          <ExternalLink className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-secondary/20">
+                    <CardHeader>
+                      <CardTitle>Volunteering activity</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription>See who from your company has volunteered and the hours logged.</CardDescription>
+                      <Button asChild variant="ghost" className="mt-4">
+                        <Link href="/corporate/volunteers">
+                          View volunteers
+                          <ExternalLink className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-900">Volunteering activity</h3>
-                  <p className="text-gray-600">See who from your company has volunteered and the hours logged.</p>
-                  <Link href="/corporate/volunteers" className="text-indigo-600 font-semibold hover:text-indigo-700">
-                    View volunteers →
-                  </Link>
-                </div>
-              </section>
 
-              <footer className="text-sm text-gray-500">
-                Profile last updated {new Date(profile.updated_at).toLocaleDateString()}
-              </footer>
-            </section>
+                <footer className="text-sm text-muted-foreground">
+                  Profile last updated {new Date(profile.updated_at).toLocaleDateString()}
+                </footer>
+              </CardContent>
+            </Card>
           ) : null}
         </div>
-      </main>
+      </DashboardLayout>
     </>
   );
 };

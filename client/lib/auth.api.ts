@@ -49,12 +49,18 @@ export async function login(
       body: JSON.stringify({ email, password }),
     });
 
-    // Store tokens on successful login
+    // Store tokens and user info on successful login
     if (response.data) {
       setTokens(response.data.access, response.data.refresh);
-      // Also store user info in localStorage
+      // Store user info in localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        const { user } = response.data;
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userId', String(user.id ?? ''));
+        localStorage.setItem('userRole', user.role ?? '');
+        if (user.profile_id) {
+          localStorage.setItem('profileId', String(user.profile_id));
+        }
       }
     }
 
@@ -77,12 +83,18 @@ export async function register(
       body: JSON.stringify(data),
     });
 
-    // Store tokens on successful registration
+    // Store tokens and user info on successful registration
     if (response.data) {
       setTokens(response.data.access, response.data.refresh);
-      // Also store user info in localStorage
+      // Store user info in localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        const { user } = response.data;
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userId', String(user.id ?? ''));
+        localStorage.setItem('userRole', user.role ?? '');
+        if (user.profile_id) {
+          localStorage.setItem('profileId', String(user.profile_id));
+        }
       }
     }
 

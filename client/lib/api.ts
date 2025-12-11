@@ -8,6 +8,7 @@ import * as usersApi from './users.api';
 import * as projectsApi from './projects.api';
 import * as mentorsApi from './mentors.api';
 import * as certificatesApi from './certificates.api';
+import * as paymentsApi from './payments.api';
 
 // Base API URL
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
@@ -51,6 +52,9 @@ export function clearAuth(): void {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('user');
+  localStorage.removeItem('userId');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('profileId');
 }
 
 /**
@@ -164,6 +168,7 @@ export const api = {
   
   // Users
   getUser: usersApi.getUser,
+  getUsers: usersApi.getUsers,
   getStudent: usersApi.getStudent,
   getStudents: usersApi.getStudents,
   getParent: usersApi.getParent,
@@ -186,6 +191,11 @@ export const api = {
   getBadges: certificatesApi.getBadges,
   getCertificates: certificatesApi.getCertificates,
   getSkills: certificatesApi.getSkills,
+  
+  // Payments
+  createCheckoutSession: paymentsApi.createCheckoutSession,
+  verifyPayment: paymentsApi.verifyPayment,
+  getPaymentTransactions: paymentsApi.getPaymentTransactions,
 };
 
 export default api;

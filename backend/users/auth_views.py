@@ -138,10 +138,9 @@ def register(request):
         profile = ParentProfile.objects.create(user=user)
         profile_id = profile.id
     elif user.role == User.CORPORATE_PARTNER:
-        profile = CorporatePartnerProfile.objects.create(
-            user=user,
-            company_name=request.data.get('company_name', '')
-        )
+        # CorporatePartnerProfile requires company_name, use user's name or email domain as fallback
+        company_name = request.data.get('company_name', f"{first_name} {last_name}".strip() or email.split('@')[0])
+        profile = CorporatePartnerProfile.objects.create(user=user, company_name=company_name)
         profile_id = profile.id
     elif user.role == User.ADMIN:
         profile = AdminProfile.objects.create(user=user)

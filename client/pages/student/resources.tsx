@@ -4,6 +4,9 @@ import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { DashboardLayout } from '@/src/components/layouts/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Badge } from '@/src/components/ui/badge';
 
 interface Resource {
   id: number;
@@ -49,11 +52,11 @@ const StudentResourcesPage: NextPage = () => {
       <Head>
         <title>Resources | AA Educates</title>
       </Head>
-      <DashboardLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 -mx-6 -my-8 px-6 py-8 space-y-10">
+      <DashboardLayout backgroundClassName="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="space-y-10">
           <header className="space-y-3">
-            <h1 className="text-3xl font-extrabold text-gray-900">Resource library</h1>
-            <p className="text-gray-600 max-w-3xl">
+            <h1 className="text-3xl font-extrabold">Resource library</h1>
+            <p className="text-muted-foreground max-w-3xl">
               Browse learning packs, project templates, and videos curated by mentors and educators. New resources are added every
               month to support your learning journey.
             </p>
@@ -61,36 +64,41 @@ const StudentResourcesPage: NextPage = () => {
 
           {loading ? (
             <div className="flex items-center justify-center min-h-[280px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
           ) : error ? (
             <div className="max-w-2xl mx-auto">
-              <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
-                <h2 className="text-xl font-semibold text-red-700 mb-2">Resources unavailable</h2>
-                <p className="text-red-600">{error}</p>
-              </div>
+              <Card className="border-destructive">
+                <CardHeader>
+                  <CardTitle className="text-destructive">Resources unavailable</CardTitle>
+                  <CardDescription className="text-destructive">{error}</CardDescription>
+                </CardHeader>
+              </Card>
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {resources.map((resource) => (
-                <article key={resource.id} className="bg-white border border-indigo-100 rounded-2xl shadow hover:shadow-lg transition p-6 space-y-4">
-                  <span className="inline-flex px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-indigo-50 text-indigo-600">
-                    {resource.category}
-                  </span>
-                  <h2 className="text-xl font-semibold text-gray-900">{resource.title}</h2>
-                  <p className="text-sm text-gray-600 leading-relaxed">{resource.description}</p>
-                  <div className="flex gap-3">
-                    <Link
-                      href={resource.url}
-                      className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold hover:bg-indigo-700 transition"
-                    >
-                      Open resource
-                    </Link>
-                    <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 text-gray-600 px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition">
-                      Save for later
-                    </button>
-                  </div>
-                </article>
+                <Card key={resource.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-primary/20">
+                  <CardHeader>
+                    <Badge variant="secondary" className="w-fit text-xs uppercase tracking-wide">
+                      {resource.category}
+                    </Badge>
+                    <CardTitle>{resource.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="leading-relaxed">{resource.description}</CardDescription>
+                    <div className="flex gap-3">
+                      <Button asChild>
+                        <Link href={resource.url}>
+                          Open resource
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Save for later
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
